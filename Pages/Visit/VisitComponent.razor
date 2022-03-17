@@ -1,0 +1,622 @@
+﻿@page "/visits"
+
+@using BlazorControlCefa.Application.Dtos.Visit
+@using BlazorControlCefa.Application.Wrappers
+@using BlazorControlCefa.Data.Entities
+@using BlazorControlCefa.Components
+@using BlazorControlCefa.Pages.Vehicle
+@using BlazorControlCefa.Repositories.Visit
+@using BlazorControlCefa.Repositories.Person
+@using BlazorControlCefa.Repositories.Reason
+@using BlazorControlCefa.Repositories.VisitType
+@using BlazorControlCefa.Repositories.Department
+@using BlazorControlCefa.Repositories.Position
+@using BlazorControlCefa.Repositories.PersonType
+@using System.Security.Claims
+
+@inject IAuthorizationService AuthorizationService
+@inject IVisitRepository VisitRepository
+@inject IPersonRepository PersonRepository
+@inject IReasonRepository ReasonRepository
+@inject IVisitTypeRepository VisitTypeRepository
+@inject IPersonRepository PersonRepository
+@inject IDepartmentRepository DepartmentRepository
+@inject IPositionRepository PositionRepository
+@inject IPersonTypeRepository PersonTypeRepository
+
+
+@attribute [Authorize(Policy = "personView-Policy")]
+
+<PageTitle>Visitas</PageTitle>
+
+<HxModal @ref="myModal"
+         Title="@(IsEditMode ? "Visita # (" + Visit.Id + ") - Hora de Ingreso: " + Visit.CheckIn : "Nueva Visita")"
+         Size="ModalSize.Large"
+         OnClosed="HandleHideClick">
+    <BodyTemplate>
+
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Principal</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link @(!IsEditMode ? "disabled" : "")" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Acompañantes</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link @(!IsEditMode ? "disabled" : "")" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact" type="button" role="tab" aria-controls="contact" aria-selected="false">Vehículos</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link @(!IsEditMode ? "disabled" : "")" id="observaciones-tab" data-bs-toggle="tab" data-bs-target="#observaciones" type="button" role="tab" aria-controls="observaciones" aria-selected="false">Observaciones</button>
+            </li>
+        </ul>
+        <div class="tab-content" id="myTabContent">
+            <br />
+            <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="Name" class="control-label">Nombres</label>
+                        <input id="name" Value="@Person.FirstName" class="form-control form-control-sm" disabled />
+                    </div>
+                    <div class="col-md-6">
+                        <label for="Name" class="control-label">Apellidos</label>
+                        <input id="name" Value="@Person.LastName" class="form-control form-control-sm" disabled />
+                    </div>
+                </div>
+
+                <EditForm Model="Visit" OnValidSubmit="OnValidSubmit">
+                    <DataAnnotationsValidator />
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="reasonId" class="control-label">Tipo Visita</label>
+                            <InputSelect @bind-Value="Visit.VisitTypeId" class="form-select form-select-sm">
+                                @*<option value="0">Seleccione el Departamento</option>*@
+                                @foreach (var visitType in VisitTypes)
+                                {
+                                    <option value="@visitType.Id">@visitType.Name</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(()=> Visit.VisitTypeId)" />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="reasonId" class="control-label">Motivo</label>
+                            <InputSelect @bind-Value="Visit.ReasonId" class="form-select form-select-sm">
+                                @*<option value="0">Seleccione el Departamento</option>*@
+                                @foreach (var reason in Reasons)
+                                {
+                                    <option value="@reason.Id">@reason.Name</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(()=> Visit.ReasonId)" />
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="reasonId" class="control-label">Persona a Visitar</label>
+                            <InputSelect @bind-Value="Visit.PersonVisitToId" class="form-select form-select-sm">
+                                @*<option value="0">Seleccione el Departamento</option>*@
+                                @foreach (var personVisitTo in PersonVisitTos)
+                                {
+                                    <option value="@personVisitTo.Id">@(personVisitTo.FirstName + " " + personVisitTo.LastName) </option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(()=> Visit.PersonVisitToId)" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="reasonId" class="control-label">Persona aprueba Visita</label>
+                            <InputSelect @bind-Value="Visit.PersonApproverId" class="form-select form-select-sm">
+                                @*<option value="0">Seleccione el Departamento</option>*@
+                                @foreach (var personApprover in PersonApprovers)
+                                {
+                                    <option value="@personApprover.Id">@(personApprover.FirstName + " " + personApprover.LastName) </option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(()=> Visit.PersonApproverId)" />
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="reasonId" class="control-label">Area a Dirigirse</label>
+                            <InputSelect @bind-Value="Visit.DepartmentId" class="form-select form-select-sm">
+                                @*<option value="0">Seleccione el Departamento</option>*@
+                                @foreach (var department in Departments)
+                                {
+                                    <option value="@department.Id">@department.Name</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(()=> Visit.DepartmentId)" />
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="vehicleCode" class="control-label">Número de Pase</label>
+                            <InputText id="vehicleCode" @bind-Value="Visit.PassNumber" class="form-control form-control-sm" />
+                            <ValidationMessage For="@(()=> Visit.PassNumber)" />
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="companyName" class="control-label">Doc de Salida</label>
+                            <InputText id="companyName" @bind-Value="Visit.DocOut" class="form-control form-control-sm" />
+                            <ValidationMessage For="@(()=> Visit.DocOut)" />
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+
+                        <div class="col-md-12">
+                            <label for="vehicleCode" class="control-label">Notas</label>
+                            <InputTextArea id="vehicleCode" @bind-Value="Visit.Note" class="form-control form-control-sm" rows="3" />
+                            <ValidationMessage For="@(()=> Visit.Note)" />
+                        </div>
+
+                    </div>
+
+                    <button type="submit" class="btn btn-success btn-sm">
+                        @(IsEditMode ? "Guardar" : "Crear")
+                    </button>
+
+                </EditForm>
+
+            </div>
+            <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                <CompanionComponent VisitId="@Visit.Id" />
+            </div>
+            <div class="tab-pane fade" id="contact" role="tabpanel" aria-labelledby="contact-tab">
+                <VehicleVisitDetailComponent VisitId="@Visit.Id"/>
+            </div>
+            <div class="tab-pane fade" id="observaciones" role="tabpanel" aria-labelledby="observaciones-tab">
+                <NotesComponent />
+            </div>
+        </div>
+
+
+
+
+    </BodyTemplate>
+    @*<FooterTemplate>
+        <HxButton Text="Close" OnClick="HandleHideClick" Color="ThemeColor.Primary" />
+        </FooterTemplate>*@
+</HxModal>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm rounded">
+    <div class="container-fluid">
+        <a class="navbar-brand fs-3">Visitas</a>
+        @*<AuthorizeView Policy="personCreate-Policy">
+            <a class="btn btn-outline-primary me-2" href="/visits/edit">
+            <span class="oi oi-plus me-2" aria-hidden="true"></span>
+            Nuevo
+            </a>
+            </AuthorizeView>*@
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <PersonFinderComponent Person="0" OnPersonSeleted="PersonSelectionHandler" />
+
+                @*<HxButton Color="ThemeColor.Warning" Icon="BootstrapIcon.PlusLg" Tooltip="Crear Nueva Entrada" CssClass="ms-4" />*@
+            </ul>
+            <div class="d-flex">
+                <Search OnSearchChanged="SearchChanged" Placeholder="Buscar" ToolTips="Buscar por Nombre, Apellido, Cédula" />
+            </div>
+        </div>
+    </div>
+</nav>
+
+<br />
+
+<div class="spinner @(!IsLoading? "visually-hidden" : string.Empty)"></div>
+
+@if (Visits is not null)
+{
+    <p>Página @MetaData.PageNumber de @MetaData.TotalPages de @MetaData.TotalCount Registros</p>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @foreach (var visit in Visits)
+        {
+            <div class="col-md-4">
+                <div class="card mb-3 shadow">
+
+                    <div class="card-body">
+
+                        @if (visit.VisitDetails.Where(p => p.VisitId == visit.Id && p.IsDeleted ==  false).Count() > 1)
+                        {
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                @(visit.VisitDetails.Where(p=>p.VisitId == visit.Id && p.IsDeleted ==  false).Count())
+                                <span class="visually-hidden">unread messages</span>
+                            </span>
+                        }
+
+
+                        <h5 class="card-title">
+                            @(visit.VisitDetails.FirstOrDefault(p=>p.VisitId == visit.Id).Persons.FirstName
+                    + " "
+                    + visit.VisitDetails.FirstOrDefault(p=>p.VisitId == visit.Id).Persons.LastName)
+                        </h5>
+                        <h6 class="card-subtitle mb-2 text-muted fst-italic"><small>@visit.VisitDetails.FirstOrDefault(p=>p.VisitId == visit.Id).Persons.CompannyName</small></h6>
+
+                        <span class="badge rounded-pill bg-primary bg-opacity-75">VN: @visit.Id</span>
+                        @*<span class="badge rounded-pill bg-success bg-opacity-75">@visit.VisitDetails.FirstOrDefault(p=>p.VisitId == visit.Id).Persons.PersonTypes.Name</span>*@
+                        <span class="badge rounded-pill bg-success bg-opacity-75">@VisitTypes.FirstOrDefault(v=>v.Id == visit.VisitTypeId).Name</span>
+                        @*<span class="badge rounded-pill bg-success bg-opacity-75">@visit.VisitTypes.Name</span>*@
+                        @*<span class="badge rounded-pill bg-success bg-opacity-75">@visit.Reasons.Name</span>*@
+                        <span class="badge rounded-pill bg-success bg-opacity-75">@Reasons.FirstOrDefault(r=>r.Id == visit.ReasonId).Name</span>
+                        @*<span class="badge rounded-pill bg-success bg-opacity-75">@visit.Departments.Name</span>*@
+
+                        @if (visit.VisitTypeId != 1)
+                        {
+                            <hr>
+
+                            @*<h6 class="card-title">@(visit.PersonVisitTos.FirstName + " " + visit.PersonVisitTos.LastName)</h6>*@
+                            <h6 class="card-title">@(PersonVisitTos.FirstOrDefault(p=>p.Id==visit.PersonVisitToId).FirstName + " " + PersonVisitTos.FirstOrDefault(p=>p.Id==visit.PersonVisitToId).LastName)</h6>
+                            @*<h6 class="card-subtitle mb-2 text-muted fst-italic"><small>@visit.PersonVisitTos.Departments.Name</small></h6>*@
+                            <h6 class="card-subtitle mb-2 text-muted fst-italic"><small>@Departments.FirstOrDefault(d=>d.Id==PersonVisitTos.FirstOrDefault(p=>p.Id==visit.PersonVisitToId).DepartmentId).Name</small></h6>
+                            @*<h6 class="card-subtitle mb-2 text-muted fst-italic"><small>@visit.PersonVisitTos.Positions.Name</small></h6>*@
+                            <h6 class="card-subtitle mb-2 text-muted fst-italic"><small>@Positions.FirstOrDefault(d=>d.Id==PersonVisitTos.FirstOrDefault(p=>p.Id==visit.PersonVisitToId).PositionId).Name</small></h6>
+
+                            @*<span class="badge rounded-pill bg-warning text-black bg-opacity-75">@visit.PersonVisitTos.PersonTypes.Name</span>*@
+                            <span class="badge rounded-pill bg-warning text-black bg-opacity-75">@PersonTypes.FirstOrDefault(d=>d.Id==PersonVisitTos.FirstOrDefault(p=>p.Id==visit.PersonVisitToId).PersonTypeId).Name</span>
+
+                            <hr>
+                            <h6>Se dirige a</h6>
+                            @*<h6 class="card-subtitle mb-2 text-muted fst-italic"><small>@visit.Departments.Name</small></h6>*@
+                            <h6 class="card-subtitle mb-2 text-muted fst-italic"><small>@Departments.FirstOrDefault(d=>d.Id==visit.DepartmentId).Name</small></h6>
+                        }
+                    </div>
+                    <div class="card-footer">
+                        @*<small class="text-muted">Last updated 3 mins ago</small>*@
+                        <span class="bi bi bi-clock-history" aria-hidden="true"></span>
+                        <small class="text-muted">Hace @( (DateTime.Now.Subtract(visit.CreatedDate.Value)).Days>0 ? (DateTime.Now.Subtract(visit.CreatedDate.Value)).Days.ToString() + " dia":"")</small>
+                        <small class="text-muted">@( (DateTime.Now.Subtract(visit.CreatedDate.Value)).Hours>0 ? (DateTime.Now.Subtract(visit.CreatedDate.Value)).Hours.ToString() + " hora":"")</small>
+                        <small class="text-muted">@( (DateTime.Now.Subtract(visit.CreatedDate.Value)).Minutes>0 ? (DateTime.Now.Subtract(visit.CreatedDate.Value)).Minutes.ToString() + " m":" un momento")</small>
+                        <div class="float-end">
+                            <a class="btn btn-light text-primary opacity-75 btn-sm"
+                       data-bs-toggle="tooltip" data-bs-placement="bottom" title="Editar" @onclick="() => OnEditClick(visit.Id)">
+                                <span class="oi oi-pencil" aria-hidden="true"></span>
+                            </a>
+
+                            @*<a class="btn btn-light text-secondary opacity-75 btn-sm" href="/vehicles/edit/detail/@visit.Id"
+                                data-bs-toggle="tooltip" data-bs-placement="bottom" title="Ver detalle">
+                                <span class="oi oi-eye" aria-hidden="true"></span>
+                                </a>*@
+
+                            <a class="btn btn-light text-danger opacity-75 btn-sm" href="/vehicles/edit/delete/@visit.Id"
+                       data-bs-toggle="tooltip" data-bs-placement="bottom" title="Borrar">
+                                <span class="oi oi-trash" aria-hidden="true"></span>
+                            </a>
+
+                            <a class="btn btn-light text-success opacity-75 btn-sm"
+                       data-bs-toggle="tooltip" data-bs-placement="bottom" title="Salir" @onclick="() => OnExitClick(visit.Id)">
+                                <span class="bi bi-arrow-right-square-fill" aria-hidden="true"></span>
+                                @*Salida*@
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <br />
+    <Pagination MetaData="MetaData" Spread="2" SelectedPage="SelectedPage"></Pagination>
+}
+
+@code {
+
+    [Inject] protected IHxMessengerService Messenger { get; set; }
+    [Inject] protected IHxMessageBoxService MessageBox { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    private ClaimsPrincipal User { get; set; }
+
+    private List<Visit> Visits { get; set; } = new List<Visit>();
+    private MetaData MetaData { get; set; } = new MetaData();
+    private VisitParametersDto _visitParameters = new VisitParametersDto { PageSize = 6 };
+
+    private bool DisabledEdit { get; set; } = false;
+    private bool IsLoading { get; set; } = false;
+
+    private int PersonId { get; set; }
+    private Person Person { get; set; }
+
+    private bool IsEditMode { get; set; } = false;
+
+
+
+    private Visit Visit { get; set; } = new Visit { IsActive = true };
+
+    private List<Reason> Reasons { get; set; } = new List<Reason>();
+    private List<VisitType> VisitTypes { get; set; } = new List<VisitType>();
+    private List<Person> PersonVisitTos { get; set; } = new List<Person>();
+    private List<Person> PersonApprovers { get; set; } = new List<Person>();
+    private List<Department> Departments { get; set; } = new List<Department>();
+    private List<Position> Positions { get; set; } = new List<Position>();
+    private List<PersonType> PersonTypes { get; set; } = new List<PersonType>();
+
+    private HxModal myModal;
+
+    protected override async Task OnInitializedAsync()
+    {
+        User = (await authenticationStateTask).User;
+
+        Reasons = await ReasonRepository.GetAllReasonForSelectionAsync();
+        VisitTypes = await VisitTypeRepository.GetAllVisitTypeForSelectionAsync();
+        PersonVisitTos = await PersonRepository.GetAllEmployeeForSelectionAsync();
+        PersonApprovers = await PersonRepository.GetAllEmployeeForSelectionAsync();
+        Departments = await DepartmentRepository.GetAllDepartmentForSelectionAsync();
+        Positions = await PositionRepository.GetAllPositionForSelectionAsync();
+        PersonTypes = await PersonTypeRepository.GetAllPersonTypeForSelectionAsync();
+        //await Task.Run(Load);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Load();
+        }
+    }
+
+    private async Task Load()
+    {
+        StateHasChanged();
+
+        IsLoading = true;
+        //System.Threading.Thread.Sleep(100);
+        var pagingResponse = await VisitRepository.GetAllVisitAsync(_visitParameters, MetaData);
+
+        Visits = pagingResponse.Items;
+        MetaData = pagingResponse.MetaData;
+        IsLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task SelectedPage(int page)
+    {
+        _visitParameters.PageNumber = page;
+        await Load();
+        //await Task.Run(Load);
+    }
+
+    private async Task SearchChanged(string searchTerm)
+    {
+        _visitParameters.PageNumber = 1;
+        _visitParameters.Filters = searchTerm;
+        await Load();
+        //await Task.Run(Load);
+
+    }
+
+    private async Task PersonSelectionHandler(int newValue)
+    {
+        //StateHasChanged();
+
+        bool success = false;
+
+        var personVisitExist = await VisitRepository.FindAnyActiveVisit(newValue);
+
+        if (personVisitExist)
+        {
+            //send a message
+            Messenger.AddError(title: "Error", message: "Ya existe una entrada para la persona seleccionada.");
+        }
+        else
+        {
+            PersonId = newValue;
+
+            Person = await PersonRepository.GetPersonAsync(PersonId);
+
+            // Es del tipo empleado
+            if (Person.PersonTypeId == 1)
+            {
+                // Tratar su ingreso como empleado
+                //TODO: Traernos la fecha del servicio
+                var visit = new Visit
+                    {
+                        VisitTypeId = 1,
+                        ReasonId = 1,
+                        DepartmentId = Person.DepartmentId,
+                        PersonVisitToId = PersonId,
+                        PersonApproverId = PersonId,
+                        CheckIn = DateTime.Now,
+                        IsCheckIn = true
+                    };
+
+                await VisitRepository.AddVisit(visit);
+                success = await VisitRepository.SaveAsync();
+
+                if (success)
+                {
+                    var visitDetail = new VisitPersonDetail
+                        {
+                            VisitId = visit.Id,
+                            PersonId = PersonId,
+                            IsPrincipal = true
+                        };
+                    await VisitRepository.AddVisitDetail(visitDetail);
+                    success = await VisitRepository.SaveAsync();
+                    if (success)
+                    {
+                        await Load();
+                        Messenger.AddInformation(title: "Información", message: "Entrada registrada satisfactoria como Empleado.");
+                    }
+                }
+            }
+            else
+            {
+                IsEditMode = false;
+                //await MessageBox.ConfirmAsync("Confirm", "Do you really want to ...?");
+                await myModal.ShowAsync();
+
+                Visit = new Visit
+                    {
+                        VisitTypeId = 1,
+                        ReasonId = 2,
+                        DepartmentId = 1,
+                        PersonVisitToId = 1,
+                        PersonApproverId = 1,
+                        CheckIn = DateTime.Now,
+                        IsCheckIn = true
+                    };
+
+                //await VisitRepository.AddVisit(Visit);
+                //success = await VisitRepository.SaveAsync();
+                //if (success)
+                //{
+                //    await Load();
+                //    Messenger.AddInformation(title: "Información", message: "Entrada registrada satisfactoria como Empleado.");
+                //}
+            }
+        }
+        //var visit = new Visit
+        //    {
+        //        VisitTypeId = 1,
+        //        ReasonId = 4,
+        //        DepartmentId = 1,
+        //        PersonVisitToId = 1,
+        //        PersonApproverId = 1,
+        //        CheckIn = DateTime.Now
+        //    };
+
+
+        //await VisitRepository.AddVisit(visit);
+        //success = await VisitRepository.SaveAsync();
+
+        //if (success)
+        //{
+        //    var visitDetail = new VisitPersonDetail
+        //    {
+        //        VisitId = visit.Id,
+        //        PersonId = PersonId
+        //    };
+        //    await VisitRepository.AddVisitDetail(visitDetail);
+        //    success = await VisitRepository.SaveAsync();
+        //    if (success)
+        //    {
+        //        Load();
+        //    }
+        //}
+        //StateHasChanged();
+    }
+
+    private async Task OnValidSubmit()
+    {
+        //StateHasChanged();
+        bool success = false;
+
+        //  Is New
+        if (!IsEditMode)
+        {
+            await VisitRepository.AddVisit(Visit);
+            success = await VisitRepository.SaveAsync();
+            if (success)
+            {
+
+                var visitDetail = new VisitPersonDetail
+                    {
+                        VisitId = Visit.Id,
+                        PersonId = PersonId,
+                        IsPrincipal = true
+                    };
+
+                await VisitRepository.AddVisitDetail(visitDetail);
+                success = await VisitRepository.SaveAsync();
+                if (success)
+                {
+                    await HandleHideClick();
+                    await Load();
+                    Messenger.AddInformation(title: "Información", message: "Entrada registrada satisfactoria como Empleado.");
+                    //Visit = new Visit();
+                }
+            }
+
+            //await VehicleRepository.AddVehicle(Vehicle);
+            //success = await VehicleRepository.SaveAsync();
+            //if (success)
+            //{
+            //    //var vehicle = VehicleRepository.GetVehicleAsync(Vehicle.Id);
+
+            //    VehicleDetail = new VehicleDetail
+            //        {
+            //            PersonId = PersonId,
+            //            VehicleId = Vehicle.Id
+            //        };
+
+            //    await VehicleRepository.AddVehicleDetail(VehicleDetail);
+            //    success = await VehicleRepository.SaveAsync();
+            //    if (success)
+            //    {
+            //        //await OnCancelSelected.InvokeAsync(!Hiden);
+            //        StateHasChanged();
+            //        await OnCancel();
+            //        StateHasChanged();
+            //    }
+            //}
+        }
+        else // Is Edit Mode
+        {
+            VisitRepository.UpdateVisit(Visit);
+            success = await VisitRepository.SaveAsync();
+            if (success)
+            {
+                //await HandleHideClick();
+                await Load();
+                Messenger.AddInformation(title: "Información", message: "Entrada actualizada satisfactoria como Empleado.");
+                //Visit = new Visit();
+            }
+        }
+        //StateHasChanged();
+    }
+
+    private async Task OnEditClick(int visitId)
+    {
+        IsEditMode = true;
+
+        Visit = await VisitRepository.GetVisitAsync(visitId);
+        Person = Visit.VisitDetails.FirstOrDefault().Persons;
+
+        await myModal.ShowAsync();
+
+        //StateHasChanged();
+    }
+
+    private async Task OnExitClick(int visitId)
+    {
+        //IsEditMode = true;
+
+        bool success = false;
+
+        var visitOut = await VisitRepository.GetVisitAsync(visitId);
+        var personOut = visitOut.VisitDetails.FirstOrDefault().Persons;
+
+        //await myModal.ShowAsync();
+
+        var confirmResult = await MessageBox.ConfirmAsync("Salida", "Desea ejecutar la salida a "
+        + personOut.FirstName + " "
+        + personOut.LastName
+        + " ?");
+
+        if (confirmResult)
+        {
+            visitOut.IsCheckIn = false;
+            visitOut.CheckOut = DateTime.Now;
+
+            VisitRepository.UpdateVisit(visitOut);
+            success = await VisitRepository.SaveAsync();
+
+            if (success)
+            {
+                //await HandleHideClick();
+                await Load();
+                Messenger.AddInformation(title: "Información", message: "Se ha ejecutado la salida satisfactoriamente.");
+                //Visit = new Visit();
+            }
+
+        }
+    }
+
+    private async Task HandleHideClick()
+    {
+        await myModal.HideAsync();
+    }
+}

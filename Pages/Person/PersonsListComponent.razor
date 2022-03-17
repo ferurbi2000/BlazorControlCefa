@@ -1,0 +1,152 @@
+﻿@page "/persons"
+
+@using BlazorControlCefa.Application.Dtos.Person
+@using BlazorControlCefa.Application.Wrappers
+@using BlazorControlCefa.Data.Entities
+@using BlazorControlCefa.Components
+@using BlazorControlCefa.Repositories.Person
+@using System.Security.Claims
+
+@inject IAuthorizationService AuthorizationService
+@inject IPersonRepository PersonRepository
+
+
+@attribute [Authorize(Policy = "personView-Policy")]
+
+<PageTitle>Personas</PageTitle>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm rounded">
+    <div class="container-fluid">
+        <a class="navbar-brand fs-3">Personas</a>
+        <AuthorizeView Policy="personCreate-Policy">
+            <a class="btn btn-outline-primary me-2" href="/persons/edit">
+                <span class="oi oi-plus me-2" aria-hidden="true"></span>
+                Nuevo
+            </a>
+        </AuthorizeView>
+        <a class="btn btn-outline-primary me-2" href="/persons/edit"
+           data-bs-toggle="tooltip" data-bs-placement="bottom" title="Exportar">
+            <span class="oi oi-data-transfer-download"></span>
+        </a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            </ul>
+            <div class="d-flex">
+                <Search OnSearchChanged="SearchChanged" Placeholder="Buscar" ToolTips="Buscar por Nombre, Apellido, Cédula" />
+            </div>
+        </div>
+    </div>
+</nav>
+
+<br />
+
+<div class="spinner @(!IsLoading? "visually-hidden" : string.Empty)"></div>
+
+@if (People is not null)
+{
+    <table class="table caption-top table-hover bg-light shadow-sm rounded">
+        <caption>Página @MetaData.PageNumber de @MetaData.TotalPages de @MetaData.TotalCount Registros</caption>
+        <thead class="table-light">
+            <tr>
+                <th>Número Identidad</th>
+                <th>Nombres</th>
+                <th>Apellidos</th>
+                <th>Tipo Persona</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var person in People)
+            {
+                <tr>
+                    <td>@person.Cedula</td>
+                    <td>@person.FirstName</td>
+                    <td>@person.LastName</td>
+                    <td>@person.PersonTypes.Name</td>
+                    <td>
+                        <span class="badge @(person.IsActive? "bg-primary": "bg-secondary")">
+                            @(person.IsActive? "Activo": "Inactivo")
+                        </span>
+                    </td>
+                    <td>
+                        <AuthorizeView Policy="personEdit-Policy">
+                            @if (person.PersonTypeId == 1 && !(AuthorizationService.AuthorizeAsync(User, "personDelete-Policy")).Result.Succeeded)
+                            {
+                                DisabledEdit = true;
+                            }
+                            else
+                            {
+                                DisabledEdit = false;
+                            }
+                            <a class="btn btn-light btn-sm text-primary @(DisabledEdit? "disabled" :string.Empty)" href="/persons/edit/@person.Id"
+                       data-bs-toggle="tooltip" data-bs-placement="bottom" title="Editar">
+                                <span class="oi oi-pencil" aria-hidden="true"></span>
+                            </a>
+                        </AuthorizeView>
+
+                        <AuthorizeView Policy="personView-Policy">
+                            <a class="btn btn-light btn-sm text-secondary" href="/persons/edit/detail/@person.Id"
+                       data-bs-toggle="tooltip" data-bs-placement="bottom" title="Ver detalle">
+                                <span class="oi oi-eye" aria-hidden="true"></span>
+                            </a>
+                        </AuthorizeView>
+
+                        <AuthorizeView Policy="personDelete-Policy">
+                            <a class="btn btn-light btn-sm text-danger" href="/persons/edit/delete/@person.Id"
+                       data-bs-toggle="tooltip" data-bs-placement="bottom" title="Borrar">
+                                <span class="oi oi-trash" aria-hidden="true"></span>
+                            </a>
+                        </AuthorizeView>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <Pagination MetaData="MetaData" Spread="2" SelectedPage="SelectedPage"></Pagination>
+}
+
+@code {
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    private ClaimsPrincipal User { get; set; }
+
+    private List<Person> People { get; set; } = new List<Person>();
+    private MetaData MetaData { get; set; } = new MetaData();
+    private PersonParametersDto _personParameters = new PersonParametersDto();
+
+    private bool DisabledEdit { get; set; } = false;
+    private bool IsLoading { get; set; } = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        User = (await authenticationStateTask).User;
+
+        await Task.Run(Load);
+    }
+
+    private async Task Load()
+    {
+        IsLoading = true;
+        //System.Threading.Thread.Sleep(100);
+        var pagingResponse = await PersonRepository.GetAllPersonAsync(_personParameters, MetaData);
+        People = pagingResponse.Items;
+        MetaData = pagingResponse.MetaData;
+        IsLoading = false;
+    }
+
+    private async Task SelectedPage(int page)
+    {
+        _personParameters.PageNumber = page;
+        await Task.Run(Load);
+    }
+
+    private async Task SearchChanged(string searchTerm)
+    {
+        _personParameters.PageNumber = 1;
+        _personParameters.Filters = searchTerm;
+        await Task.Run(Load);
+    }
+}

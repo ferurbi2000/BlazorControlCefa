@@ -1,0 +1,180 @@
+is_global = true
+build_property.TargetFramework = net6.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = BlazorControlCefa
+build_property.RootNamespace = BlazorControlCefa
+build_property.ProjectDir = C:\Users\furbina\source\repos\BlazorControlCefa\
+build_property.RazorLangVersion = 6.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = C:\Users\furbina\source\repos\BlazorControlCefa
+build_property._RazorSourceGeneratorDebug = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/App.razor]
+build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Components/Pagination.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdpbmF0aW9uLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Components/Search.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xTZWFyY2gucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/Department/DepartmentEditComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRGVwYXJ0bWVudFxEZXBhcnRtZW50RWRpdENvbXBvbmVudC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/Department/DepartmentListComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRGVwYXJ0bWVudFxEZXBhcnRtZW50TGlzdENvbXBvbmVudC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5kZXgucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/PersonType/PersonTypeEditComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUGVyc29uVHlwZVxQZXJzb25UeXBlRWRpdENvbXBvbmVudC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/PersonType/PersonTypesListComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUGVyc29uVHlwZVxQZXJzb25UeXBlc0xpc3RDb21wb25lbnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/Person/PersonEditComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUGVyc29uXFBlcnNvbkVkaXRDb21wb25lbnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/Person/PersonsListComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUGVyc29uXFBlcnNvbnNMaXN0Q29tcG9uZW50LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/Person/VehicleAsigment/CreateVehicleForAPerson.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUGVyc29uXFZlaGljbGVBc2lnbWVudFxDcmVhdGVWZWhpY2xlRm9yQVBlcnNvbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/Person/VehicleAsigment/PersonVehicleComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUGVyc29uXFZlaGljbGVBc2lnbWVudFxQZXJzb25WZWhpY2xlQ29tcG9uZW50LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/Position/PositionEditComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUG9zaXRpb25cUG9zaXRpb25FZGl0Q29tcG9uZW50LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/Position/PositionListComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUG9zaXRpb25cUG9zaXRpb25MaXN0Q29tcG9uZW50LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/Reason/ReasonEditComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVhc29uXFJlYXNvbkVkaXRDb21wb25lbnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/Reason/ReasonListComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVhc29uXFJlYXNvbkxpc3RDb21wb25lbnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/VehicleBrand/VehicleBrandEditComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmVoaWNsZUJyYW5kXFZlaGljbGVCcmFuZEVkaXRDb21wb25lbnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/VehicleBrand/VehicleBrandListComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmVoaWNsZUJyYW5kXFZlaGljbGVCcmFuZExpc3RDb21wb25lbnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/VehicleType/VehicleTypeEditComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmVoaWNsZVR5cGVcVmVoaWNsZVR5cGVFZGl0Q29tcG9uZW50LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/VehicleType/VehicleTypeListComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmVoaWNsZVR5cGVcVmVoaWNsZVR5cGVMaXN0Q29tcG9uZW50LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/Vehicle/VehicleEditComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmVoaWNsZVxWZWhpY2xlRWRpdENvbXBvbmVudC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/Vehicle/VehicleListComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmVoaWNsZVxWZWhpY2xlTGlzdENvbXBvbmVudC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/Vehicle/VehiclePlateFinderComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmVoaWNsZVxWZWhpY2xlUGxhdGVGaW5kZXJDb21wb25lbnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/VisitType/VisitTypeEditComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmlzaXRUeXBlXFZpc2l0VHlwZUVkaXRDb21wb25lbnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/VisitType/VisitTypeListComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmlzaXRUeXBlXFZpc2l0VHlwZUxpc3RDb21wb25lbnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/Visit/CompanionComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmlzaXRcQ29tcGFuaW9uQ29tcG9uZW50LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/Visit/CreatePersonForAVisitComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmlzaXRcQ3JlYXRlUGVyc29uRm9yQVZpc2l0Q29tcG9uZW50LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/Visit/NotesComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmlzaXRcTm90ZXNDb21wb25lbnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/Visit/PersonFinderComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmlzaXRcUGVyc29uRmluZGVyQ29tcG9uZW50LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/Visit/VehicleVisitDetailComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmlzaXRcVmVoaWNsZVZpc2l0RGV0YWlsQ29tcG9uZW50LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/Visit/VisitComponent.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmlzaXRcVmlzaXRDb21wb25lbnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Shared/LoginDisplay.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXExvZ2luRGlzcGxheS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Shared/SurveyPrompt.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXFN1cnZleVByb21wdC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Shared/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE1haW5MYXlvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-qu23ikuw6e
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Shared/NavMenu.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE5hdk1lbnUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-yqj8ar3006
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Areas/Identity/Pages/Account/LogOut.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxMb2dPdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Areas/Identity/Pages/Shared/_LoginPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcU2hhcmVkXF9Mb2dpblBhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRXJyb3IuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/_Host.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX0hvc3QuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/furbina/source/repos/BlazorControlCefa/Pages/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX0xheW91dC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 

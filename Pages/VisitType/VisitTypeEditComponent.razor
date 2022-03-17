@@ -1,0 +1,165 @@
+﻿@page "/visitTypes/edit/{id}"
+@page "/visitTypes/edit"
+@page "/visitTypes/edit/{action}/{id}"
+
+
+@using BlazorControlCefa.Data.Entities
+@using BlazorControlCefa.Data.Enums
+@using BlazorControlCefa.Repositories.VisitType
+
+@inject IVisitTypeRepository VisitTypeRepository
+
+@inject NavigationManager NavigationManager
+
+@attribute [Authorize(Policy = "visitTypesView-policy")]
+
+<PageTitle>@Titulo Tipo Visita</PageTitle>
+<h3>@Titulo Tipo Visita</h3>
+
+@if (VisitType is null)
+{
+    <div class="spinner"></div>
+}
+else
+{
+    <EditForm Model="VisitType" OnValidSubmit="OnValidSubmit">
+        <DataAnnotationsValidator />
+        @*<ValidationSummary />*@
+
+        <div class="row mb-3">
+
+            <div class="col-md-6">
+                <label class="control-label">Estado</label>
+                <h4>
+                    <span class="badge @(VisitType.IsActive? "bg-primary": "bg-secondary")">
+                        @(VisitType.IsActive? "Activo": "Inactivo")
+                    </span>
+                </h4>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="Name" class="control-label">Nombre</label>
+                <InputText id="name" @bind-Value="VisitType.Name" class="form-control" disabled="@(DisabledComponent)" />
+                <ValidationMessage For="@(()=> VisitType.Name)" />
+            </div>
+        </div>
+
+        <button type="submit" class="btn @(Action=="delete"? "btn-danger" : "btn-primary") @(HideSave? "visually-hidden" : string.Empty)">
+            @ButtonTitle
+        </button>
+
+        <button type="button" class="btn btn-secondary" @onclick="OnCancel">Cancelar</button>
+
+        <figure class="@(Action!="delete"? "visually-hidden" : string.Empty)">
+            <blockquote class="blockquote">
+                <p>Está seguro de borrar este registro?.</p>
+            </blockquote>
+            <figcaption class="blockquote-footer">
+                El registro no se va borrar de la base de dato, quedará en estado <cite title="Inactivo">Inactivo</cite>
+            </figcaption>
+        </figure>
+    </EditForm>
+
+}
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    [Parameter]
+    public string Action { get; set; }
+
+    private VisitType VisitType { get; set; } = new VisitType { IsActive = true };
+
+    private bool HideSave { get; set; } = false;
+    private bool DisabledComponent { get; set; } = false;
+
+    private string Titulo { get; set; }
+    private string ButtonTitle { get; set; } = "Guardar";
+
+    protected async override Task OnInitializedAsync()
+    {
+
+        int.TryParse(Id, out int iVisitTypeId);
+
+        if (!string.IsNullOrEmpty(Action))
+        {
+            VisitType = await VisitTypeRepository.GetVisitTypeAsync(iVisitTypeId);
+
+            switch (Action)
+            {
+                case "delete":
+                    {
+                        Titulo = "Borrar";
+                        ButtonTitle = "Borrar";
+
+                        DisabledComponent = true;
+                    }
+                    break;
+
+                case "detail":
+                    {
+                        Titulo = "Detalle";
+
+                        HideSave = true;
+                        DisabledComponent = true;
+                    }
+                    break;
+            }
+        }
+        else
+        {
+            if (iVisitTypeId != 0)
+            {
+                Titulo = "Editar";
+                VisitType = await VisitTypeRepository.GetVisitTypeAsync(iVisitTypeId);
+            }
+            else
+            {
+                Titulo = "Nuevo";
+                VisitType = new VisitType();
+            }
+        }
+    }
+
+    private async Task OnValidSubmit()
+    {
+        bool success = false;
+
+        if (!string.IsNullOrEmpty(Action))
+        {
+            switch (Action)
+            {
+                case "delete":
+                    {
+                        VisitTypeRepository.DeleteVisitType(VisitType);
+                        success = await VisitTypeRepository.SaveAsync();
+                    }
+                    break;
+            }
+        }
+        else
+        {
+            if (VisitType.Id != 0)
+            {
+                VisitTypeRepository.UpdateVisitType(VisitType);
+                success = await VisitTypeRepository.SaveAsync();
+            }
+            else
+            {
+                await VisitTypeRepository.AddVisitType(VisitType);
+                success = await VisitTypeRepository.SaveAsync();
+            }
+        }
+
+        if (success)
+            NavigationManager.NavigateTo("/visitTypes");
+    }
+
+    private void OnCancel()
+    {
+        NavigationManager.NavigateTo("/visitTypes");
+    }
+}

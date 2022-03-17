@@ -1,0 +1,29 @@
+﻿<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <HxMessageBoxHost/>
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                <NotAuthorized>
+                    <p>Lo sentimos, no está autorizado para acceder a esta página..</p>
+                    <p>Es posible que deba iniciar sesión como un usuario diferente.</p>
+
+                    <div class="col-md-2 text-center">
+                        <p><i class="fa fa-exclamation-triangle fa-5x"></i><br />Status Code: 403</p>
+                    </div>
+                    <div class="col-md-10">
+                        <h3>OPPSSS!!!! Sorry...</h3>
+                        <p>Sorry, your access is refused due to security reasons of our server and also our sensitive data.<br />Please go back to the previous page to continue browsing.</p>
+                        <a class="btn btn-danger" href="javascript:history.back()">Go Back</a>
+                    </div>
+                </NotAuthorized>
+            </AuthorizeRouteView>
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>Not found</PageTitle>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <p role="alert">Lo sentimos, no pudimos encontrar esta dirección.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>

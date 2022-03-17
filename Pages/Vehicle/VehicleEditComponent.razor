@@ -1,0 +1,320 @@
+﻿@page "/vehicles/edit/{id}"
+@page "/vehicles/edit"
+@page "/vehicles/edit/{action}/{id}"
+
+@using BlazorControlCefa.Data.Entities
+@using BlazorControlCefa.Data.Enums
+@using BlazorControlCefa.Repositories.Vehicle
+@using BlazorControlCefa.Repositories.VehicleType
+@using BlazorControlCefa.Repositories.VehicleBrand
+@*@using BlazorControlCefa.Repositories.Person*@
+
+@*@using BlazorControlCefa.Repositories.Position*@
+
+@inject IVehicleRepository VehicleRepository
+@inject IVehicleTypeRepository VehicleTypeRepository
+@inject IVehicleBrandRepository VehicleBrandRepository
+@*@inject IPositionRepository PositionRepository*@
+
+@inject NavigationManager NavigationManager
+
+@inject IAuthorizationService AuthorizationService
+
+@attribute [Authorize(Policy = "personEdit-Policy")]
+
+<PageTitle>@Titulo Vehículo</PageTitle>
+<h3>@Titulo Vehículo</h3>
+
+@if (Vehicle is null)
+{
+    <div class="spinner"></div>
+}
+else
+{
+    <EditForm Model="Vehicle" OnValidSubmit="OnValidSubmit">
+        <DataAnnotationsValidator />
+        @*<ValidationSummary />*@
+
+        <div class="row mb-3">
+
+            <div class="col-md-6">
+                <label for="Plate" class="control-label">Placa</label>
+                <InputText id="plate" @bind-Value="Vehicle.Plate" class="form-control" disabled="@(DisabledComponent)" />
+                <ValidationMessage For="@(()=> Vehicle.Plate)" />
+            </div>
+
+            <div class="col-md-6">
+                <label class="control-label">Estado</label>
+                <h4>
+                    <span class="badge @(Vehicle.IsActive? "bg-primary": "bg-secondary")">
+                        @(Vehicle.IsActive? "Activo": "Inactivo")
+                    </span>
+                </h4>
+            </div>
+
+        </div>
+
+        <div class="row mb-3">
+
+            <div class="col-md-4">
+                <label for="vehicleTypeId" class="control-label">Tipo de Vehículo</label>
+                <InputSelect @bind-Value="Vehicle.VehicleTypeId" class="form-select" disabled="@(DisabledComponent)">
+                    @*<option value="0">Seleccione el Departamento</option>*@
+                    @foreach (var vehicleType in VehicleTypes)
+                    {
+                    <option value="@vehicleType.Id">@vehicleType.Name</option>
+                    }
+            </InputSelect>
+            <div class="form-text">We'll never share your email with anyone else.</div>
+            <ValidationMessage For="@(()=> Vehicle.VehicleTypeId)" />
+        </div>
+
+        <div class="col-md-4">
+            <label for="vehicleBrandId" class="control-label">Marca del Vehículo</label>
+            <InputSelect @bind-Value="Vehicle.VehicleBrandId" class="form-select" disabled="@(DisabledComponent)">
+                @*<option value="0">Seleccione el Departamento</option>*@
+                @foreach (var vehicleBrand in VehicleBrands)
+                    {
+                    <option value="@vehicleBrand.Id">@vehicleBrand.Name</option>
+                    }
+            </InputSelect>
+            <div class="form-text">We'll never share your email with anyone else.</div>
+            <ValidationMessage For="@(()=> Vehicle.VehicleBrandId)" />
+        </div>
+
+        <div class="col-md-4">
+            <label for="color" class="control-label">Color</label>
+            <InputSelect @bind-Value="Vehicle.Color" class="form-select" disabled="@(DisabledComponent)">
+                @*<option selected>Seleccione el Color</option>*@
+                @foreach (var color in Enum.GetValues(typeof(Color)).Cast<Color>().OrderBy(x=>x.ToString()))
+                    {
+                    <option value="@color">@color</option>
+                    }
+            </InputSelect>
+            <ValidationMessage For="@(()=> Vehicle.Color)" />
+        </div>
+
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="personTypeId" class="control-label">Vehículo Propio o asignado</label>
+            <InputSelect @bind-Value="Vehicle.OwnerType" @oninput="SelectedOwnerChanged" class="form-select" disabled="@(DisabledComponent)">
+                @*<option selected>Seleccione una opción</option>*@
+                @foreach (var ownerType in Enum.GetValues(typeof(OwnerType)))
+                    {
+                    <option value="@ownerType">@ownerType</option>
+                    }
+            </InputSelect>
+            <div class="form-text">We'll never share your email with anyone else.</div>
+            <ValidationMessage For="@(()=> Vehicle.OwnerType)" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="vehicleCode" class="control-label">Codigo Vehículo</label>
+            <InputText id="vehicleCode" @bind-Value="Vehicle.VehicleCode" class="form-control" disabled="@(DisabledComponent)" />
+            <ValidationMessage For="@(()=> Vehicle.VehicleCode)" />
+        </div>
+
+        <div class="col-md-6">
+            <label for="companyName" class="control-label">Nombre de la Empresa</label>
+            <InputText id="companyName" @bind-Value="Vehicle.CompanyName" class="form-control" disabled="@(DisabledComponent)" />
+            <ValidationMessage For="@(()=> Vehicle.CompanyName)" />
+        </div>
+    </div>
+
+
+    <button type="submit" class="btn @(Action=="delete"? "btn-danger" : "btn-primary") @(HideSave? "visually-hidden" : string.Empty)" disabled="@(DisabledDelete)">
+        @ButtonTitle
+    </button>
+
+    <button type="button" class="btn btn-secondary" @onclick="OnCancel">Cancelar</button>
+
+
+    <figure class="@(Action!="delete"? "visually-hidden" : string.Empty)">
+        <blockquote class="blockquote">
+            <p>Está seguro de borrar este registro?.</p>
+        </blockquote>
+        <figcaption class="blockquote-footer">
+            El registro no se va borrar de la base de dato, quedará en estado <cite title="Inactivo">Inactivo</cite>
+        </figcaption>
+    </figure>
+
+</EditForm>
+
+}
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    [Parameter]
+    public string Action { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+
+    private Vehicle Vehicle { get; set; } = new Vehicle { IsActive = true };
+
+    private List<VehicleType> VehicleTypes { get; set; } = new List<VehicleType>();
+    private List<VehicleBrand> VehicleBrands { get; set; } = new List<VehicleBrand>();
+
+
+    private string SelectedTipo { get; set; }
+    private bool HideComponent { get; set; } = true;
+    private bool HideSave { get; set; } = false;
+    private bool DisabledComponent { get; set; } = false;
+    private bool DisabledDelete { get; set; } = false;
+
+    private string Titulo { get; set; }
+    private string ButtonTitle { get; set; } = "Guardar";
+
+
+    protected async override Task OnInitializedAsync()
+    {
+        var user = (await authenticationStateTask).User;
+
+        @if ((await AuthorizationService.AuthorizeAsync(user, "personEdit-Policy")).Succeeded)
+        {
+            @if ((await AuthorizationService.AuthorizeAsync(user, "personDelete-Policy")).Succeeded)
+            {
+                DisabledDelete = false;
+            }
+            else
+            {
+                if ((Action == "delete"))
+                {
+                    DisabledDelete = true;
+                }
+            }
+        }
+
+        VehicleTypes = await VehicleTypeRepository.GetAllVehicleTypeForSelectionAsync();
+        VehicleBrands = await VehicleBrandRepository.GetAllVehicleBrandForSelectionAsync();
+        //Positions = await PositionRepository.GetAllPositionForSelectionAsync();
+
+        int.TryParse(Id, out int iVehicleId);
+
+        if (!string.IsNullOrEmpty(Action))
+        {
+            Vehicle = await VehicleRepository.GetVehicleAsync(iVehicleId);
+
+            switch (Action)
+            {
+                case "delete":
+                    {
+                        Titulo = "Borrar";
+                        ButtonTitle = "Borrar";
+
+                        SelectedTipo = Vehicle.OwnerType.ToString();
+                        HideComponent = SelectedTipo == "DeEstaEmpresa" ? false : true;
+                        DisabledComponent = true;
+                    }
+                    break;
+
+                case "detail":
+                    {
+                        Titulo = "Detalle";
+
+                        SelectedTipo = Vehicle.OwnerType.ToString();
+                        HideComponent = SelectedTipo == "DeEstaEmpresa" ? false : true;
+                        HideSave = true;
+                        DisabledComponent = true;
+                    }
+                    break;
+            }
+        }
+        else
+        {
+            if (iVehicleId != 0)
+            {
+                Titulo = "Editar";
+                Vehicle = await VehicleRepository.GetVehicleAsync(iVehicleId);
+
+                SelectedTipo = Vehicle.OwnerType.ToString();
+                HideComponent = SelectedTipo == "DeEstaEmpresa" ? false : true;
+
+                if (Vehicle.OwnerType == "DeEstaEmpresa" && !(await AuthorizationService.AuthorizeAsync(user, "personDelete-Policy")).Succeeded)
+                {
+                    DisabledDelete = true;
+                }
+                else
+                {
+                    DisabledDelete = false;
+                }
+            }
+            else
+            {
+                Titulo = "Nueva";
+                Vehicle = new Vehicle
+                    {
+                        VehicleTypeId = 1,
+                        VehicleBrandId = 1,
+                        OwnerType = OwnerType.Propio.ToString(),
+                        Color = Color.Amarillo.ToString()
+                    };
+            }
+        }
+    }
+
+    private async Task OnValidSubmit()
+    {
+        bool success = false;
+
+        if (!string.IsNullOrEmpty(Action))
+        {
+            switch (Action)
+            {
+                case "delete":
+                    {
+                        VehicleRepository.DeleteVehicle(Vehicle);
+                        success = await VehicleRepository.SaveAsync();
+                    }
+                    break;
+            }
+        }
+        else
+        {
+            if (Vehicle.Id != 0)
+            {
+                VehicleRepository.UpdateVehicle(Vehicle);
+                success = await VehicleRepository.SaveAsync();
+            }
+            else
+            {
+                await VehicleRepository.AddVehicle(Vehicle);
+                success = await VehicleRepository.SaveAsync();
+            }
+        }
+
+        if (success)
+            NavigationManager.NavigateTo("/vehicles");
+    }
+
+    private void OnCancel()
+    {
+        NavigationManager.NavigateTo("/vehicles");
+    }
+
+    public async Task SelectedOwnerChanged(ChangeEventArgs e)
+    {
+        if (e.Value is not null)
+        {
+            var user = (await authenticationStateTask).User;
+
+            SelectedTipo = (string)e.Value;
+            HideComponent = SelectedTipo == "DeEstaEmpresa" ? false : true;
+
+            if (SelectedTipo == "DeEstaEmpresa" && !(await AuthorizationService.AuthorizeAsync(user, "personDelete-Policy")).Succeeded)
+            {
+                DisabledDelete = true;
+            }
+            else
+            {
+                DisabledDelete = false;
+            }
+        }
+    }
+}

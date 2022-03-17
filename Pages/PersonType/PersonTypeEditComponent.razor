@@ -1,0 +1,165 @@
+﻿@page "/personTypes/edit/{id}"
+@page "/personTypes/edit"
+@page "/personTypes/edit/{action}/{id}"
+
+
+@using BlazorControlCefa.Data.Entities
+@using BlazorControlCefa.Data.Enums
+@using BlazorControlCefa.Repositories.PersonType
+
+@inject IPersonTypeRepository PersonTypeRepository
+
+@inject NavigationManager NavigationManager
+
+@attribute [Authorize(Policy = "personTypeView-policy")]
+
+<PageTitle>@Titulo Tipo Persona</PageTitle>
+<h3>@Titulo Tipo Persona</h3>
+
+@if (PersonType is null)
+{
+    <div class="spinner"></div>
+}
+else
+{
+    <EditForm Model="PersonType" OnValidSubmit="OnValidSubmit">
+        <DataAnnotationsValidator />
+        @*<ValidationSummary />*@
+
+        <div class="row mb-3">
+
+            <div class="col-md-6">
+                <label class="control-label">Estado</label>
+                <h4>
+                    <span class="badge @(PersonType.IsActive? "bg-primary": "bg-secondary")">
+                        @(PersonType.IsActive? "Activo": "Inactivo")
+                    </span>
+                </h4>
+            </div>
+        </div>        
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="Name" class="control-label">Nombre</label>
+            <InputText id="name" @bind-Value="PersonType.Name" class="form-control" disabled="@(DisabledComponent)" />            
+            <ValidationMessage For="@(()=> PersonType.Name)" />
+        </div>        
+    </div>    
+
+    <button type="submit" class="btn @(Action=="delete"? "btn-danger" : "btn-primary") @(HideSave? "visually-hidden" : string.Empty)">
+        @ButtonTitle
+    </button>
+
+    <button type="button" class="btn btn-secondary" @onclick="OnCancel">Cancelar</button>
+
+    <figure class="@(Action!="delete"? "visually-hidden" : string.Empty)">
+        <blockquote class="blockquote">
+            <p>Está seguro de borrar este registro?.</p>
+        </blockquote>
+        <figcaption class="blockquote-footer">
+            El registro no se va borrar de la base de dato, quedará en estado <cite title="Inactivo">Inactivo</cite>
+        </figcaption>
+    </figure>
+</EditForm>
+
+}
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    [Parameter]
+    public string Action { get; set; }    
+
+    private PersonType PersonType { get; set; } = new PersonType { IsActive = true };    
+    
+    private bool HideSave { get; set; } = false;
+    private bool DisabledComponent { get; set; } = false;    
+
+    private string Titulo { get; set; }
+    private string ButtonTitle { get; set; } = "Guardar";
+
+    protected async override Task OnInitializedAsync()
+    {
+        
+        int.TryParse(Id, out int iPersonTypeId);
+
+        if (!string.IsNullOrEmpty(Action))
+        {
+            PersonType = await PersonTypeRepository.GetPersonTypeAsync(iPersonTypeId);
+
+            switch (Action)
+            {
+                case "delete":
+                    {
+                        Titulo = "Borrar";
+                        ButtonTitle = "Borrar";                        
+
+                        DisabledComponent = true;
+                    }
+                    break;
+
+                case "detail":
+                    {
+                        Titulo = "Detalle";
+
+                        HideSave = true;
+                        DisabledComponent = true;
+                    }
+                    break;
+            }
+        }
+        else
+        {
+            if (iPersonTypeId != 0)
+            {
+                Titulo = "Editar";
+                PersonType = await PersonTypeRepository.GetPersonTypeAsync(iPersonTypeId);
+            }
+            else
+            {
+                Titulo = "Nueva";
+                PersonType = new PersonType();
+            }
+        }
+    }
+
+    private async Task OnValidSubmit()
+    {
+        bool success = false;
+
+        if (!string.IsNullOrEmpty(Action))
+        {
+            switch (Action)
+            {
+                case "delete":
+                    {
+                        PersonTypeRepository.DeletePersonType(PersonType);
+                        success = await PersonTypeRepository.SaveAsync();
+                    }
+                    break;
+            }
+        }
+        else
+        {
+            if (PersonType.Id != 0)
+            {
+                PersonTypeRepository.UpdatePersonType(PersonType);
+                success = await PersonTypeRepository.SaveAsync();
+            }
+            else
+            {
+                await PersonTypeRepository.AddPersonType(PersonType);
+                success = await PersonTypeRepository.SaveAsync();
+            }
+        }
+
+        if (success)
+            NavigationManager.NavigateTo("/personTypes");
+    }
+
+    private void OnCancel()
+    {
+        NavigationManager.NavigateTo("/personTypes");
+    }    
+}

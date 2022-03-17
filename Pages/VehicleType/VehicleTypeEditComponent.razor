@@ -1,0 +1,165 @@
+﻿@page "/vehicleTypes/edit/{id}"
+@page "/vehicleTypes/edit"
+@page "/vehicleTypes/edit/{action}/{id}"
+
+
+@using BlazorControlCefa.Data.Entities
+@using BlazorControlCefa.Data.Enums
+@using BlazorControlCefa.Repositories.VehicleType
+
+@inject IVehicleTypeRepository VehicleTypeRepository
+
+@inject NavigationManager NavigationManager
+
+@attribute [Authorize(Policy = "vehicleTypeView-policy")]
+
+<PageTitle>@Titulo Tipo Vehiculo</PageTitle>
+<h3>@Titulo Tipo Vehiculo</h3>
+
+@if (VehicleType is null)
+{
+    <div class="spinner"></div>
+}
+else
+{
+    <EditForm Model="VehicleType" OnValidSubmit="OnValidSubmit">
+        <DataAnnotationsValidator />
+        @*<ValidationSummary />*@
+
+        <div class="row mb-3">
+
+            <div class="col-md-6">
+                <label class="control-label">Estado</label>
+                <h4>
+                    <span class="badge @(VehicleType.IsActive? "bg-primary": "bg-secondary")">
+                        @(VehicleType.IsActive? "Activo": "Inactivo")
+                    </span>
+                </h4>
+            </div>
+        </div>        
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="Name" class="control-label">Nombre</label>
+            <InputText id="name" @bind-Value="VehicleType.Name" class="form-control" disabled="@(DisabledComponent)" />            
+            <ValidationMessage For="@(()=> VehicleType.Name)" />
+        </div>        
+    </div>    
+
+    <button type="submit" class="btn @(Action=="delete"? "btn-danger" : "btn-primary") @(HideSave? "visually-hidden" : string.Empty)">
+        @ButtonTitle
+    </button>
+
+    <button type="button" class="btn btn-secondary" @onclick="OnCancel">Cancelar</button>
+
+    <figure class="@(Action!="delete"? "visually-hidden" : string.Empty)">
+        <blockquote class="blockquote">
+            <p>Está seguro de borrar este registro?.</p>
+        </blockquote>
+        <figcaption class="blockquote-footer">
+            El registro no se va borrar de la base de dato, quedará en estado <cite title="Inactivo">Inactivo</cite>
+        </figcaption>
+    </figure>
+</EditForm>
+
+}
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    [Parameter]
+    public string Action { get; set; }    
+
+    private VehicleType VehicleType { get; set; } = new VehicleType { IsActive = true };    
+    
+    private bool HideSave { get; set; } = false;
+    private bool DisabledComponent { get; set; } = false;    
+
+    private string Titulo { get; set; }
+    private string ButtonTitle { get; set; } = "Guardar";
+
+    protected async override Task OnInitializedAsync()
+    {
+        
+        int.TryParse(Id, out int iVehicleTypeId);
+
+        if (!string.IsNullOrEmpty(Action))
+        {
+            VehicleType = await VehicleTypeRepository.GetVehicleTypeAsync(iVehicleTypeId);
+
+            switch (Action)
+            {
+                case "delete":
+                    {
+                        Titulo = "Borrar";
+                        ButtonTitle = "Borrar";                        
+
+                        DisabledComponent = true;
+                    }
+                    break;
+
+                case "detail":
+                    {
+                        Titulo = "Detalle";
+
+                        HideSave = true;
+                        DisabledComponent = true;
+                    }
+                    break;
+            }
+        }
+        else
+        {
+            if (iVehicleTypeId != 0)
+            {
+                Titulo = "Editar";
+                VehicleType = await VehicleTypeRepository.GetVehicleTypeAsync(iVehicleTypeId);
+            }
+            else
+            {
+                Titulo = "Nuevo";
+                VehicleType = new VehicleType();
+            }
+        }
+    }
+
+    private async Task OnValidSubmit()
+    {
+        bool success = false;
+
+        if (!string.IsNullOrEmpty(Action))
+        {
+            switch (Action)
+            {
+                case "delete":
+                    {
+                        VehicleTypeRepository.DeleteVehicleType(VehicleType);
+                        success = await VehicleTypeRepository.SaveAsync();
+                    }
+                    break;
+            }
+        }
+        else
+        {
+            if (VehicleType.Id != 0)
+            {
+                VehicleTypeRepository.UpdateVehicleType(VehicleType);
+                success = await VehicleTypeRepository.SaveAsync();
+            }
+            else
+            {
+                await VehicleTypeRepository.AddVehicleType(VehicleType);
+                success = await VehicleTypeRepository.SaveAsync();
+            }
+        }
+
+        if (success)
+            NavigationManager.NavigateTo("/vehicleTypes");
+    }
+
+    private void OnCancel()
+    {
+        NavigationManager.NavigateTo("/vehicleTypes");
+    }    
+}

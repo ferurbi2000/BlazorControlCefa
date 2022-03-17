@@ -1,0 +1,143 @@
+﻿@using BlazorControlCefa.Data.Entities
+@using BlazorControlCefa.Data.Enums
+@using BlazorControlCefa.Repositories.Person
+@using BlazorControlCefa.Repositories.Visit
+@using BlazorControlCefa.Repositories.PersonType
+
+@inject IPersonRepository PersonRepository
+@inject IPersonTypeRepository PersonTypeRepository
+@inject IVisitRepository VisitRepository
+
+<div class="card mb-3 @(Hiden? "visually-hidden": string.Empty)" style="max-width: 180rem;">
+    <div class="card-header">Nueva Persona</div>
+    <div class="card-body">
+        <EditForm Model="Person" OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator />
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="personTypeId" class="control-label">Tipo Persona</label>
+                    <InputSelect @bind-Value="Person.PersonTypeId" class="form-select form-select-sm">
+                        <option selected>Seleccione el Tipo de Persona</option>
+                        @foreach (var person in PersonTypes)
+                        {
+                            <option value="@person.Id">@person.Name</option>
+                        }
+                    </InputSelect>                    
+                    <ValidationMessage For="@(()=> Person.PersonTypeId)" />
+                </div>
+
+                <div class="col-md-6">
+                    <label for="Cedula" class="control-label">Número Identidad</label>
+                    <InputText id="cedula" @bind-Value="Person.Cedula" class="form-control form-control-sm" />
+                    <div class="form-text">Cedula / Pasaporte / Licencia.</div>
+                    <ValidationMessage For="@(()=> Person.Cedula)" />
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="FirstName" class="control-label">Nombres</label>
+                    <InputText id="firstname" @bind-Value="Person.FirstName" class="form-control form-control-sm" />
+                    <ValidationMessage For="@(()=> Person.FirstName)" />
+                </div>
+                <div class="col-md-6">
+                    <label for="LastName" class="control-label">Apellidos</label>
+                    <InputText id="lastname" @bind-Value="Person.LastName" class="form-control form-control-sm" />
+                    <ValidationMessage For="@(()=> Person.LastName)" />
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="gender" class="control-label">Sexo</label>
+                    <InputSelect @bind-Value="Person.Gender" class="form-select form-select-sm">
+                        <option selected>Seleccione el Sexo</option>
+                        @foreach (var gender in Enum.GetValues(typeof(Gender)))
+                        {
+                            <option value="@gender">@gender</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(()=> Person.Gender)" />
+                </div>
+                <div class="col-md-6">
+                    <label for="CompannyName" class="control-label">Compañia</label>
+                    <InputText id="compannyName" @bind-Value="Person.CompannyName" class="form-control form-control-sm" />
+                    <ValidationMessage For="@(()=> Person.CompannyName)" />
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-success btn-sm">
+                Crear y Asignar
+            </button>
+
+            <button type="button" class="btn btn-secondary btn-sm" @onclick="@(OnCancel)">Cancelar</button>
+            
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public bool Hiden { get; set; } = true;
+
+    [Parameter]
+    public int VisitId { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OnCancelSelected { get; set; }
+
+    private Person Person { get; set; } = new Person { IsActive = true };
+    private VisitPersonDetail VisitPersonDetail { get; set; } = new VisitPersonDetail { IsActive = true };
+    private List<PersonType> PersonTypes { get; set; } = new List<PersonType>();
+       
+    protected async override Task OnInitializedAsync()
+    {
+        PersonTypes = await PersonTypeRepository.GetAllPersonTypeForSelectionAsync();
+        PersonTypes = PersonTypes.Where(p => p.Id != 1).ToList();
+
+        Person = new Person
+            {
+                DepartmentId = 1,
+                PositionId = 1
+            };
+
+    }
+    
+    private async Task OnValidSubmit()
+    {
+        bool success = false;
+
+        await PersonRepository.AddPerson(Person);
+        success = await PersonRepository.SaveAsync();
+
+        if (success)
+        {            
+            VisitPersonDetail = new VisitPersonDetail
+                {
+                    VisitId = VisitId,
+                    PersonId = Person.Id
+                };
+
+            await VisitRepository.AddVisitDetail(VisitPersonDetail);
+            success = await VisitRepository.SaveAsync();
+            if (success)
+            {                
+                StateHasChanged();
+                await OnCancel();
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task OnCancel()
+    {
+        Person = new Person
+            {
+                DepartmentId = 1,
+                PositionId = 1
+            };
+
+        await OnCancelSelected.InvokeAsync(!Hiden);
+    }
+}

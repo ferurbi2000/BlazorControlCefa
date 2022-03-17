@@ -1,0 +1,346 @@
+﻿@page "/persons/edit/{id}"
+@page "/persons/edit"
+@page "/persons/edit/{action}/{id}"
+
+
+@using BlazorControlCefa.Data.Entities
+@using BlazorControlCefa.Data.Enums
+@using BlazorControlCefa.Repositories.Department
+@using BlazorControlCefa.Repositories.Person
+@using BlazorControlCefa.Repositories.PersonType
+@using BlazorControlCefa.Repositories.Position
+@using BlazorControlCefa.Pages.Person.VehicleAsigment
+
+@inject IPersonRepository PersonRepository
+@inject IPersonTypeRepository PersonTypeRepository
+@inject IDepartmentRepository DepartmentRepository
+@inject IPositionRepository PositionRepository
+
+@inject IServiceScopeFactory serviceScopeFactory
+
+@inject NavigationManager NavigationManager
+
+@inject IAuthorizationService AuthorizationService
+
+@attribute [Authorize(Policy = "personEdit-Policy")]
+
+<PageTitle>@Titulo Persona</PageTitle>
+<h3>@Titulo Persona</h3>
+
+
+<div class="spinner @(!IsLoading? "visually-hidden" : string.Empty)"></div>
+
+@*@if (Person is null)
+    {
+    <div class="spinner"></div>
+    }
+    else*@
+@if (Person is not null)
+{
+    <EditForm Model="Person" OnValidSubmit="OnValidSubmit">
+        <DataAnnotationsValidator />
+        @*<ValidationSummary />*@
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="personTypeId" class="control-label">Tipo Persona</label>
+                <InputSelect @bind-Value="Person.PersonTypeId" @oninput="SelectedTiposChanged" class="form-select" disabled="@(DisabledComponent)">
+                    <option selected>Seleccione el Tipo de Persona</option>
+                    @foreach (var person in PersonTypes)
+                    {
+                    <option value="@person.Id">@person.Name</option>
+                    }
+            </InputSelect>
+            <div class="form-text">We'll never share your email with anyone else.</div>
+            <ValidationMessage For="@(()=> Person.PersonTypeId)" />
+        </div>
+
+        <div class="col-md-6">
+            <label class="control-label">Estado</label>
+            <h4>
+                <span class="badge @(Person.IsActive? "bg-primary": "bg-secondary")">
+                    @(Person.IsActive? "Activo": "Inactivo")
+                </span>
+            </h4>
+        </div>
+    </div>
+
+    <div class="row mb-3 @(HideComponent? "visually-hidden" : string.Empty)">
+        <div class="col-md-6">
+            <label for="departmetId" class="control-label">Departamento</label>
+            <InputSelect @bind-Value="Person.DepartmentId" class="form-select" disabled="@(DisabledComponent)">
+                @*<option value="0">Seleccione el Departamento</option>*@
+                @foreach (var department in Departments)
+                    {
+                    <option value="@department.Id">@department.Name</option>
+                    }
+            </InputSelect>
+            <div class="form-text">We'll never share your email with anyone else.</div>
+            <ValidationMessage For="@(()=> Person.DepartmentId)" />
+        </div>
+
+        <div class="col-md-6">
+            <label for="positionId" class="control-label">Puesto</label>
+            <InputSelect @bind-Value="Person.PositionId" class="form-select" disabled="@(DisabledComponent)">
+                @*<option value="0">Seleccione el Puesto</option>*@
+                @foreach (var position in Positions)
+                    {
+                    <option value="@position.Id">@position.Name</option>
+                    }
+            </InputSelect>
+            <div class="form-text">We'll never share your email with anyone else.</div>
+            <ValidationMessage For="@(()=> Person.PositionId)" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="Cedula" class="control-label">Número Identidad</label>
+            <InputText id="cedula" @bind-Value="Person.Cedula" class="form-control" disabled="@(DisabledComponent)" />
+            <div class="form-text">Cedula / Pasaporte / Licencia.</div>
+            <ValidationMessage For="@(()=> Person.Cedula)" />
+        </div>
+        <div class="col-md-6">
+            <label for="gender" class="control-label">Sexo</label>
+            <InputSelect @bind-Value="Person.Gender" class="form-select" disabled="@(DisabledComponent)">
+                <option selected>Seleccione el Sexo</option>
+                @foreach (var gender in Enum.GetValues(typeof(Gender)))
+                    {
+                    <option value="@gender">@gender</option>
+                    }
+            </InputSelect>
+            <ValidationMessage For="@(()=> Person.Gender)" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="FirstName" class="control-label">Nombres</label>
+            <InputText id="firstname" @bind-Value="Person.FirstName" class="form-control" disabled="@(DisabledComponent)" />
+            <ValidationMessage For="@(()=> Person.FirstName)" />
+        </div>
+        <div class="col-md-6">
+            <label for="LastName" class="control-label">Apellidos</label>
+            <InputText id="lastname" @bind-Value="Person.LastName" class="form-control" disabled="@(DisabledComponent)" />
+            <ValidationMessage For="@(()=> Person.LastName)" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="CompannyName" class="control-label">Compañia</label>
+            <InputText id="compannyName" @bind-Value="Person.CompannyName" class="form-control" disabled="@(DisabledComponent)" />
+            <ValidationMessage For="@(()=> Person.CompannyName)" />
+        </div>       
+    </div>
+
+    <button type="submit" class="btn @(Action=="delete"? "btn-danger" : "btn-primary") @(HideSave? "visually-hidden" : string.Empty)" disabled="@(DisabledDelete)">
+        @ButtonTitle
+    </button>
+
+    <HxOffcanvas @ref="offcanvasComponent" Title="Vehículos Asignados" BackdropEnabled="false" Size="OffcanvasSize.Large">
+        <BodyTemplate>
+            <PersonVehicleComponent PersonId="Person.Id"></PersonVehicleComponent>
+        </BodyTemplate>
+    </HxOffcanvas>
+
+    <HxButton OnClick="() => offcanvasComponent.ShowAsync()" CssClass="@(Titulo=="Nueva"? "visually-hidden": string.Empty)" Text="Asignar Vehículo" Icon="BootstrapIcon.Truck" Color="ThemeColor.Success" />
+
+    <button type="button" class="btn btn-secondary" @onclick="OnCancel">Cancelar</button>
+
+    <figure class="@(Action!="delete"? "visually-hidden" : string.Empty)">
+        <blockquote class="blockquote">
+            <p>Está seguro de borrar este registro?.</p>
+        </blockquote>
+        <figcaption class="blockquote-footer">
+            El registro no se va borrar de la base de dato, quedará en estado <cite title="Inactivo">Inactivo</cite>
+        </figcaption>
+    </figure>
+
+</EditForm>
+
+}
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    [Parameter]
+    public string Action { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+
+    private Person Person { get; set; } = new Person { IsActive = true };
+
+    private List<PersonType> PersonTypes { get; set; } = new List<PersonType>();
+    private List<Department> Departments { get; set; } = new List<Department>();
+    private List<Position> Positions { get; set; } = new List<Position>();
+
+    private string SelectedTipo { get; set; }
+    private bool HideComponent { get; set; } = true;
+    private bool HideSave { get; set; } = false;
+    private bool DisabledComponent { get; set; } = false;
+    private bool DisabledDelete { get; set; } = false;
+
+    private string Titulo { get; set; }
+    private string ButtonTitle { get; set; } = "Guardar";
+
+    private bool IsLoading { get; set; } = false;
+
+    private HxOffcanvas offcanvasComponent;
+
+    protected async override Task OnInitializedAsync()
+    {
+        await Task.Run(Load);
+    }
+
+    private async Task Load()
+    {
+        IsLoading = true;
+
+        var user = (await authenticationStateTask).User;
+
+        @if ((await AuthorizationService.AuthorizeAsync(user, "personEdit-Policy")).Succeeded)
+        {
+            @if ((await AuthorizationService.AuthorizeAsync(user, "personDelete-Policy")).Succeeded)
+            {
+                DisabledDelete = false;
+            }
+            else
+            {
+                if ((Action == "delete"))
+                {
+                    DisabledDelete = true;
+                }
+            }
+        }
+
+        PersonTypes = await PersonTypeRepository.GetAllPersonTypeForSelectionAsync();
+        Departments = await DepartmentRepository.GetAllDepartmentForSelectionAsync();
+        Positions = await PositionRepository.GetAllPositionForSelectionAsync();
+
+        int.TryParse(Id, out int iPersonId);
+
+        if (!string.IsNullOrEmpty(Action))
+        {
+            Person = await PersonRepository.GetPersonAsync(iPersonId);
+
+            switch (Action)
+            {
+                case "delete":
+                    {
+                        Titulo = "Borrar";
+                        ButtonTitle = "Borrar";
+
+                        SelectedTipo = Person.PersonTypeId.ToString();
+                        HideComponent = SelectedTipo == "1" ? false : true;
+                        DisabledComponent = true;
+                    }
+                    break;
+
+                case "detail":
+                    {
+                        Titulo = "Detalle";
+
+                        SelectedTipo = Person.PersonTypeId.ToString();
+                        HideComponent = SelectedTipo == "1" ? false : true;
+                        HideSave = true;
+                        DisabledComponent = true;
+                    }
+                    break;
+            }
+        }
+        else
+        {
+            if (iPersonId != 0)
+            {
+                Titulo = "Editar";
+                Person = await PersonRepository.GetPersonAsync(iPersonId);
+
+                SelectedTipo = Person.PersonTypeId.ToString();
+                HideComponent = SelectedTipo == "1" ? false : true;
+
+                if (Person.PersonTypeId == 1 && !(await AuthorizationService.AuthorizeAsync(user, "personDelete-Policy")).Succeeded)
+                {
+                    DisabledDelete = true;
+                }
+                else
+                {
+                    DisabledDelete = false;
+                }
+            }
+            else
+            {
+                Titulo = "Nueva";
+                Person = new Person
+                    {
+                        DepartmentId = 1,
+                        PositionId = 1
+                    };
+            }
+        }
+        IsLoading = false;
+
+    }
+
+
+    private async Task OnValidSubmit()
+    {
+        bool success = false;
+
+        if (!string.IsNullOrEmpty(Action))
+        {
+            switch (Action)
+            {
+                case "delete":
+                    {
+                        PersonRepository.DeletePerson(Person);
+                        success = await PersonRepository.SaveAsync();
+                    }
+                    break;
+            }
+        }
+        else
+        {
+            if (Person.Id != 0)
+            {
+                PersonRepository.UpdatePerson(Person);
+                success = await PersonRepository.SaveAsync();
+            }
+            else
+            {
+                await PersonRepository.AddPerson(Person);
+                success = await PersonRepository.SaveAsync();
+            }
+        }
+
+        if (success)
+            NavigationManager.NavigateTo("/persons");
+    }
+
+    private void OnCancel()
+    {
+        NavigationManager.NavigateTo("/persons");
+    }
+
+    public async Task SelectedTiposChanged(ChangeEventArgs e)
+    {
+        if (e.Value is not null)
+        {
+            var user = (await authenticationStateTask).User;
+
+            SelectedTipo = (string)e.Value;
+            HideComponent = SelectedTipo == "1" ? false : true;
+
+            if (SelectedTipo == "1" && !(await AuthorizationService.AuthorizeAsync(user, "personDelete-Policy")).Succeeded)
+            {
+                DisabledDelete = true;
+            }
+            else
+            {
+                DisabledDelete = false;
+            }
+        }
+    }
+}

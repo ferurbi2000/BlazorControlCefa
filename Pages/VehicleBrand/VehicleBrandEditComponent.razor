@@ -1,0 +1,165 @@
+﻿@page "/vehicleBrands/edit/{id}"
+@page "/vehicleBrands/edit"
+@page "/vehicleBrands/edit/{action}/{id}"
+
+
+@using BlazorControlCefa.Data.Entities
+@using BlazorControlCefa.Data.Enums
+@using BlazorControlCefa.Repositories.VehicleBrand
+
+@inject IVehicleBrandRepository VehicleBrandRepository
+
+@inject NavigationManager NavigationManager
+
+@attribute [Authorize(Policy = "vehicleBrandView-policy")]
+
+<PageTitle>@Titulo Marca de Vehículo</PageTitle>
+<h3>@Titulo Marca de Vehículo</h3>
+
+@if (VehicleBrand is null)
+{
+    <div class="spinner"></div>
+}
+else
+{
+    <EditForm Model="VehicleBrand" OnValidSubmit="OnValidSubmit">
+        <DataAnnotationsValidator />
+        @*<ValidationSummary />*@
+
+        <div class="row mb-3">
+
+            <div class="col-md-6">
+                <label class="control-label">Estado</label>
+                <h4>
+                    <span class="badge @(VehicleBrand.IsActive? "bg-primary": "bg-secondary")">
+                        @(VehicleBrand.IsActive? "Activo": "Inactivo")
+                    </span>
+                </h4>
+            </div>
+        </div>        
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="Name" class="control-label">Nombre</label>
+            <InputText id="name" @bind-Value="VehicleBrand.Name" class="form-control" disabled="@(DisabledComponent)" />            
+            <ValidationMessage For="@(()=> VehicleBrand.Name)" />
+        </div>        
+    </div>    
+
+    <button type="submit" class="btn @(Action=="delete"? "btn-danger" : "btn-primary") @(HideSave? "visually-hidden" : string.Empty)">
+        @ButtonTitle
+    </button>
+
+    <button type="button" class="btn btn-secondary" @onclick="OnCancel">Cancelar</button>
+
+    <figure class="@(Action!="delete"? "visually-hidden" : string.Empty)">
+        <blockquote class="blockquote">
+            <p>Está seguro de borrar este registro?.</p>
+        </blockquote>
+        <figcaption class="blockquote-footer">
+            El registro no se va borrar de la base de dato, quedará en estado <cite title="Inactivo">Inactivo</cite>
+        </figcaption>
+    </figure>
+</EditForm>
+
+}
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    [Parameter]
+    public string Action { get; set; }    
+
+    private VehicleBrand VehicleBrand { get; set; } = new VehicleBrand { IsActive = true };    
+    
+    private bool HideSave { get; set; } = false;
+    private bool DisabledComponent { get; set; } = false;    
+
+    private string Titulo { get; set; }
+    private string ButtonTitle { get; set; } = "Guardar";
+
+    protected async override Task OnInitializedAsync()
+    {
+        
+        int.TryParse(Id, out int iVehicleBrandId);
+
+        if (!string.IsNullOrEmpty(Action))
+        {
+            VehicleBrand = await VehicleBrandRepository.GetVehicleBrandAsync(iVehicleBrandId);
+
+            switch (Action)
+            {
+                case "delete":
+                    {
+                        Titulo = "Borrar";
+                        ButtonTitle = "Borrar";                        
+
+                        DisabledComponent = true;
+                    }
+                    break;
+
+                case "detail":
+                    {
+                        Titulo = "Detalle";
+
+                        HideSave = true;
+                        DisabledComponent = true;
+                    }
+                    break;
+            }
+        }
+        else
+        {
+            if (iVehicleBrandId != 0)
+            {
+                Titulo = "Editar";
+                VehicleBrand = await VehicleBrandRepository.GetVehicleBrandAsync(iVehicleBrandId);
+            }
+            else
+            {
+                Titulo = "Nueva";
+                VehicleBrand = new VehicleBrand();
+            }
+        }
+    }
+
+    private async Task OnValidSubmit()
+    {
+        bool success = false;
+
+        if (!string.IsNullOrEmpty(Action))
+        {
+            switch (Action)
+            {
+                case "delete":
+                    {
+                        VehicleBrandRepository.DeleteVehicleBrand(VehicleBrand);
+                        success = await VehicleBrandRepository.SaveAsync();
+                    }
+                    break;
+            }
+        }
+        else
+        {
+            if (VehicleBrand.Id != 0)
+            {
+                VehicleBrandRepository.UpdateVehicleBrand(VehicleBrand);
+                success = await VehicleBrandRepository.SaveAsync();
+            }
+            else
+            {
+                await VehicleBrandRepository.AddVehicleBrand(VehicleBrand);
+                success = await VehicleBrandRepository.SaveAsync();
+            }
+        }
+
+        if (success)
+            NavigationManager.NavigateTo("/vehicleBrands");
+    }
+
+    private void OnCancel()
+    {
+        NavigationManager.NavigateTo("/vehicleBrands");
+    }    
+}

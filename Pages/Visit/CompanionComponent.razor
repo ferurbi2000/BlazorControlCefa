@@ -1,0 +1,271 @@
+﻿@using BlazorControlCefa.Application.Dtos.Vehicle
+@using BlazorControlCefa.Application.Wrappers
+@using BlazorControlCefa.Data.Entities
+@using BlazorControlCefa.Pages.Person.VehicleAsigment
+@using BlazorControlCefa.Repositories.Vehicle
+@using BlazorControlCefa.Repositories.Visit
+@using BlazorControlCefa.Pages.Vehicle
+
+
+@inject IVisitRepository VisitRepository
+
+
+<div class="row g-0 mb-3">
+    <div class="col-md-8">
+
+        @*<VehiclePlateFinderComponent Plate="@VehicleId" OnPlateSeleted="PlateSelectionHandler" />*@
+        <PersonFinderComponent Person="0" Enabled=newItemShow OnPersonSeleted="PersonSelectionHandler" />
+        @*<p>VehicleId: @VehicleId</p>*@
+
+    </div>
+    <div class="col-md-4 d-flex">
+        <HxButton Color="ThemeColor.Warning" Icon="BootstrapIcon.PlusLg" Tooltip="Crear persona" CssClass="ms-2"
+                  OnClick="NewItemClicked"
+                  Enabled="@(!newItemShow? false: true)" />
+    </div>
+
+</div>
+
+
+<div>
+    <CreatePersonForAVisitComponent Hiden="@newItemShow"
+                             VisitId="@VisitId" OnCancelSelected="CancelNewItemHandler" />
+</div>
+
+<div class="@(!newItemShow ? "visually-hidden": string.Empty)" style="height: 358px; overflow-y: scroll;">
+    <HxListLayout Title="Visitantes" TFilterModel="FilterModelDto">
+        @*<NamedViewsTemplate>
+            <HxNamedViewList TFilterModel="FilterModelDto" FilterModel="filterModel" FilterModelChanged="HandleFilterModelChanged" NamedViews="namedViews" OnNamedViewSelected="NamedViewSelected" />
+            </NamedViewsTemplate>*@
+        <SearchTemplate>
+
+        </SearchTemplate>
+        @*<FilterTemplate Context="filterContext">
+            <HxInputNumber Label="MinimumItemId" @bind-Value="filterContext.MinimumItemId" />
+            </FilterTemplate>*@
+        <CommandsTemplate>
+            @*<HxButton Text="Nuevo" Color="ThemeColor.Success" Size="ButtonSize.Small" Icon="BootstrapIcon.PlusLg" CssClass="ms-1" OnClick="NewItemClicked" />*@
+        </CommandsTemplate>
+        <DataTemplate>
+            <HxGrid @ref="gridComponent" TItem="VisitPersonDetail"
+                    DataProvider="LoadDataItems" SelectedDataItem="VisitPersonDetail"
+                    SelectedDataItemChanged="HandleSelectedDataItemChanged"
+                    TableContainerCssClass="table-responsive"
+                    ContentNavigationMode="GridContentNavigationMode.InfiniteScroll"
+                    ItemRowHeight="41">
+                <Columns>
+                    @*<HxGridColumn TItem="VehicleDetail" HeaderText="Placa" ItemTextSelector="@(item => item.Id.ToString())" SortString="@nameof(VehicleDetail.Id)"  IsDefaultSortColumn="true" />*@
+                    <HxGridColumn TItem="VisitPersonDetail" HeaderText="Cédula" ItemTextSelector="@(item => item.Persons.Cedula)" />
+                    <HxGridColumn TItem="VisitPersonDetail" HeaderText="Nombres" ItemTextSelector="@(item => item.Persons.FirstName)" />
+                    <HxGridColumn TItem="VisitPersonDetail" HeaderText="Apellidos" ItemTextSelector="@(item => item.Persons.LastName)" />
+                    <HxGridColumn TItem="VisitPersonDetail" HeaderText="Tipo Persona" ItemTextSelector="@(item => item.Persons.PersonTypes.Name)" />
+                    <HxGridColumn TItem="VisitPersonDetail" HeaderText="Es Principal" ItemTextSelector="@(item => item.IsPrincipal.ToString()=="True" ? "Principal":"Acompañante")" />
+                    @*<HxGridColumn TItem="VisitPersonDetail" HeaderText="Tipo Vehiculo" ItemTextSelector="@(item => item.Vehicles.VehicleTypes.Name)" />
+                        <HxGridColumn TItem="VisitPersonDetail" HeaderText="Marca" ItemTextSelector="@(item => item.Vehicles.VehicleBrands.Name)" />
+                        <HxGridColumn TItem="VisitPersonDetail" HeaderText="Color" ItemTextSelector="@(item => item.Vehicles.Color)" />*@
+                </Columns>
+                <ContextMenu Context="item">
+                    <HxContextMenu>
+                        <HxContextMenuItem Enabled=(!(bool)item.IsPrincipal) Text="Quitar" Icon="BootstrapIcon.Trash" OnClick="async () => await DeleteItemClicked(item)" />
+                    </HxContextMenu>
+                </ContextMenu>
+            </HxGrid>
+        </DataTemplate>
+        <DetailTemplate>
+            @*Edit: @VehicleDetail?.Id*@
+        </DetailTemplate>
+    </HxListLayout>
+</div>
+
+@code {
+
+    [Inject] protected IHxMessengerService Messenger { get; set; }
+    [Inject] protected IHxMessageBoxService MessageBox { get; set; }
+
+    [Parameter]
+    public int VisitId { get; set; }
+
+    [Inject] protected NavigationManager NavigationManager { get; set; }
+
+    private VisitPersonDetail VisitPersonDetail { get; set; } = new VisitPersonDetail { IsActive = true };
+    //private FilterModelDto filterModel = new FilterModelDto();
+    private HxGrid<VisitPersonDetail> gridComponent;
+
+    private List<VisitPersonDetail> Persons { get; set; } = new List<VisitPersonDetail>();
+
+    //private MetaData MetaData { get; set; } = new MetaData();
+    private VehicleParametersDto _vehicleParameters = new VehicleParametersDto();
+
+    private int VehicleId { get; set; }
+    private int PersonId { get; set; }
+
+    public bool newItemShow = true;
+
+    private readonly IEnumerable<NamedView<FilterModelDto>> namedViews = new List<NamedView<FilterModelDto>>()
+    {
+        new NamedView<FilterModelDto>("Minimum = 1", () => new FilterModelDto { MinimumItemId = 1 } ),
+        new NamedView<FilterModelDto>("Minimum = 2", () => new FilterModelDto { MinimumItemId = 2 }),
+        new NamedView<FilterModelDto>("Minimum = 3", () => new FilterModelDto { MinimumItemId = 3 })
+    };
+
+
+    //protected override async Task OnAfterRenderAsync(bool firstRender)
+    //{
+    //    if (firstRender)
+    //    {
+    //        await Load();
+    //    }
+    //}
+
+    //private async Task Load()
+    //{
+    //    StateHasChanged();
+    //    Persons = await VisitRepository.GetAllPersonPerVisitDetailForAssingAsync(VisitId);
+    //    StateHasChanged();
+    //}
+
+    private async Task<GridDataProviderResult<VisitPersonDetail>> LoadDataItems(GridDataProviderRequest<VisitPersonDetail> request)
+    {
+        StateHasChanged();
+        
+        Persons = await VisitRepository.GetAllPersonPerVisitDetailForAssingAsync(VisitId);        
+
+        return request.ApplyTo(Persons);
+    }
+
+    //private async Task HandleFilterModelChanged(FilterModelDto newFilterModel)
+    //{
+    //    filterModel = newFilterModel;
+    //    await gridComponent.RefreshDataAsync();
+    //}
+
+    //protected async Task NamedViewSelected(NamedView<FilterModelDto> namedView)
+    //{
+    //    filterModel = namedView.Filter();
+    //    await gridComponent.RefreshDataAsync();
+    //}
+
+    //protected async Task SearchRequested()
+    //{
+    //    await gridComponent.RefreshDataAsync();
+    //}
+
+    private async Task DeleteItemClicked(VisitPersonDetail dataItemDto)
+    {
+        //var confirmResult = await MessageBox.ConfirmAsync("Está seguro de quitar la Persona "
+        //+ dataItemDto.Persons.FirstName + " "
+        //+ dataItemDto.Persons.LastName
+        //+ " ?");
+
+        //if (confirmResult)
+        //{
+
+        StateHasChanged();
+
+        bool success = false;
+
+        //_ = dataItemDto;
+        VisitPersonDetail = await VisitRepository.GetVisitPersonDetailAsync(dataItemDto.Id);
+        VisitRepository.DeleteVisitPersonDetail(VisitPersonDetail);
+
+        success = await VisitRepository.SaveAsync();
+
+        if (success)
+            await gridComponent.RefreshDataAsync();
+
+        //return Task.CompletedTask;
+        //}
+    }
+
+    private Task HandleSelectedDataItemChanged(VisitPersonDetail selection)
+    {
+        VisitPersonDetail = selection;
+        // await dataItemEditComponent.ShowAsync();
+        return Task.CompletedTask;
+    }
+
+    private Task NewItemClicked()
+    {
+
+        //VehicleDetail = new VehicleDetail
+        //    {
+        //        PersonId = PersonId,
+        //        VehicleId = VehicleId
+        //    };
+
+        newItemShow = !newItemShow;
+
+
+        //Title = currentItem.Vehicles.Plate;
+        //await dataItemEditComponent.ShowAsync();
+        return Task.CompletedTask;
+    }
+
+    public record FilterModelDto
+    {
+        public int MinimumItemId { get; set; }
+    }
+
+    public record DataItemDto
+    {
+        public int ItemId { get; set; }
+        public string Name { get; set; }
+    }
+
+    private async Task PlateSelectionHandler(int newValue)
+    {
+        //bool success = false;
+
+        //VehicleId = newValue;
+
+        //VehicleDetail = new VehicleDetail
+        //    {
+        //        PersonId = PersonId,
+        //        VehicleId = VehicleId
+        //    };
+
+        //await VehicleRepository.AddVehicleDetail(VehicleDetail);
+        //success = await VehicleRepository.SaveAsync();
+
+        //if (success)
+        //    await gridComponent.RefreshDataAsync();
+
+    }
+
+    private async Task PersonSelectionHandler(int newValue)
+    {
+
+        bool success = false;
+
+        var personVisitExist = await VisitRepository.FindAnyPersonInVisitDetail(VisitId, newValue);
+
+        if (personVisitExist)
+        {
+            //send a message
+            Messenger.AddError(title: "Error", message: "Ya existe una entrada para la persona seleccionada.");
+        }
+        else
+        {
+            PersonId = newValue;
+
+            VisitPersonDetail = new VisitPersonDetail
+                {
+                    VisitId = VisitId,
+                    PersonId = PersonId
+                };
+
+            await VisitRepository.AddVisitDetail(VisitPersonDetail);
+            success = await VisitRepository.SaveAsync();
+
+            if (success)
+                await gridComponent.RefreshDataAsync();
+        }
+
+    }
+
+    private async Task CancelNewItemHandler(bool newValue)
+    {
+        newItemShow = newValue;
+        await gridComponent.RefreshDataAsync();
+    }
+}

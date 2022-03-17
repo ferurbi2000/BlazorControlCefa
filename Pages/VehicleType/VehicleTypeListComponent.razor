@@ -1,0 +1,123 @@
+﻿@page "/vehicleTypes"
+
+@using BlazorControlCefa.Application.Dtos.VehicleType
+@using BlazorControlCefa.Application.Wrappers
+@using BlazorControlCefa.Data.Entities
+@using BlazorControlCefa.Components
+@using BlazorControlCefa.Repositories.VehicleType
+
+@inject IVehicleTypeRepository VehicleTypeRepository
+
+
+@attribute [Authorize(Policy = "vehicleTypeView-policy")]
+
+<PageTitle>Tipo Vehiculos</PageTitle>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm rounded">
+    <div class="container-fluid">
+        <a class="navbar-brand fs-3">Tipo Vehiculos</a>
+        <a class="btn btn-outline-primary me-2" href="/vehicleTypes/edit">
+            <span class="oi oi-plus me-2" aria-hidden="true"></span>
+            Nuevo
+        </a>
+        <a class="btn btn-outline-primary me-2" href="/vehicleTypes/edit"
+           data-bs-toggle="tooltip" data-bs-placement="bottom" title="Exportar">
+            <span class="oi oi-data-transfer-download"></span>
+        </a>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            </ul>
+            <div class="d-flex">
+                <Search OnSearchChanged="SearchChanged" Placeholder="Buscar" ToolTips="Buscar por Nombre" />
+            </div>
+        </div>
+    </div>
+</nav>
+
+<br />
+
+<div class="spinner @(!IsLoading? "visually-hidden" : string.Empty)"></div>
+
+@if (VehicleTypes is not null)
+{
+    <table class="table caption-top table-hover bg-light shadow-sm rounded">
+        <caption>Página @MetaData.PageNumber de @MetaData.TotalPages de @MetaData.TotalCount Registros</caption>
+        <thead class="table-light">
+            <tr>
+                <th>Tipo Vehiculo</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var vehicleType in VehicleTypes)
+            {
+                <tr>
+                    <td>@vehicleType.Name</td>
+                    <td>
+                        <span class="badge @(vehicleType.IsActive? "bg-primary": "bg-secondary")">
+                            @(vehicleType.IsActive? "Activo": "Inactivo")
+                        </span>
+                    </td>
+                    <td>
+                        <a class="btn btn-light btn-sm text-primary" href="/vehicleTypes/edit/@vehicleType.Id"
+                   data-bs-toggle="tooltip" data-bs-placement="bottom" title="Editar">
+                            <span class="oi oi-pencil" aria-hidden="true"></span>
+                        </a>
+
+                        <a class="btn btn-light btn-sm text-secondary" href="/vehicleTypes/edit/detail/@vehicleType.Id"
+                   data-bs-toggle="tooltip" data-bs-placement="bottom" title="Ver detalle">
+                            <span class="oi oi-eye" aria-hidden="true"></span>
+                        </a>
+
+                        <a class="btn btn-light btn-sm text-danger" href="/vehicleTypes/edit/delete/@vehicleType.Id"
+                   data-bs-toggle="tooltip" data-bs-placement="bottom" title="Borrar">
+                            <span class="oi oi-trash" aria-hidden="true"></span>
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <Pagination MetaData="MetaData" Spread="2" SelectedPage="SelectedPage"></Pagination>
+}
+
+@code {    
+
+    private List<VehicleType> VehicleTypes { get; set; } = new List<VehicleType>();
+    private MetaData MetaData { get; set; } = new MetaData();
+    private VehicleTypeParametersDto _vehicleTypeParameters = new VehicleTypeParametersDto();
+    
+    private bool IsLoading { get; set; } = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {        
+        await Task.Run(Load);
+    }
+
+    private async Task Load()
+    {
+        IsLoading = true;
+        //System.Threading.Thread.Sleep(100);
+        var pagingResponse = await VehicleTypeRepository.GetAllVehicleTypeAsync(_vehicleTypeParameters, MetaData);
+        VehicleTypes = pagingResponse.Items;
+        MetaData = pagingResponse.MetaData;
+        IsLoading = false;
+    }
+
+    private async Task SelectedPage(int page)
+    {
+        _vehicleTypeParameters.PageNumber = page;
+        await Task.Run(Load);
+    }
+
+    private async Task SearchChanged(string searchTerm)
+    {
+        _vehicleTypeParameters.PageNumber = 1;
+        _vehicleTypeParameters.Filters = searchTerm;
+        await Task.Run(Load);
+    }
+}
+
+

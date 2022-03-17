@@ -1,0 +1,228 @@
+﻿@using BlazorControlCefa.Application.Dtos.Vehicle
+@using BlazorControlCefa.Application.Wrappers
+@using BlazorControlCefa.Data.Entities
+@using BlazorControlCefa.Pages.Person.VehicleAsigment
+@using BlazorControlCefa.Repositories.Vehicle
+@using BlazorControlCefa.Pages.Vehicle
+
+
+@inject IVehicleRepository VehicleRepository
+
+
+<div class="row g-1 mb-2">
+    <div class="col-md-11">
+
+        <VehiclePlateFinderComponent Plate="@VehicleId" OnPlateSeleted="PlateSelectionHandler" />
+        @*<p>VehicleId: @VehicleId</p>*@
+
+    </div>
+    <div class="col-md-1 d-flex">
+        <HxButton Color="ThemeColor.Warning" Icon="BootstrapIcon.PlusLg" Tooltip="Crear Nuevo Vehículo" CssClass="ms-1"
+        OnClick="NewItemClicked"
+        Enabled="@(!newItemShow? false: true)"/>        
+    </div>    
+
+</div>
+
+
+<div>
+    <CreateVehicleForAPerson Hiden = "@newItemShow" 
+    PersonId = "@PersonId" OnCancelSelected="CancelNewItemHandler"/>
+</div>
+
+<div style="height: 358px; overflow-y: scroll;">
+    <HxListLayout Title="Vehículos" TFilterModel="FilterModelDto">
+        @*<NamedViewsTemplate>
+            <HxNamedViewList TFilterModel="FilterModelDto" FilterModel="filterModel" FilterModelChanged="HandleFilterModelChanged" NamedViews="namedViews" OnNamedViewSelected="NamedViewSelected" />
+            </NamedViewsTemplate>*@
+        <SearchTemplate>
+
+        </SearchTemplate>
+        @*<FilterTemplate Context="filterContext">
+            <HxInputNumber Label="MinimumItemId" @bind-Value="filterContext.MinimumItemId" />
+            </FilterTemplate>*@
+        <CommandsTemplate>
+            @*<HxButton Text="Nuevo" Color="ThemeColor.Success" Size="ButtonSize.Small" Icon="BootstrapIcon.PlusLg" CssClass="ms-1" OnClick="NewItemClicked" />*@
+        </CommandsTemplate>
+        <DataTemplate>
+            <HxGrid @ref="gridComponent" TItem="VehicleDetail"
+                    DataProvider="LoadDataItems" SelectedDataItem="VehicleDetail"
+                    SelectedDataItemChanged="HandleSelectedDataItemChanged"
+                    TableContainerCssClass="table-responsive"
+                    ContentNavigationMode="GridContentNavigationMode.InfiniteScroll"
+                    ItemRowHeight="41">
+                <Columns>
+                    @*<HxGridColumn TItem="VehicleDetail" HeaderText="Placa" ItemTextSelector="@(item => item.Id.ToString())" SortString="@nameof(VehicleDetail.Id)"  IsDefaultSortColumn="true" />*@
+                    <HxGridColumn TItem="VehicleDetail" HeaderText="Placa" ItemTextSelector="@(item => item.Vehicles.Plate)" />
+                    <HxGridColumn TItem="VehicleDetail" HeaderText="Tipo Vehiculo" ItemTextSelector="@(item => item.Vehicles.VehicleTypes.Name)" />
+                    <HxGridColumn TItem="VehicleDetail" HeaderText="Marca" ItemTextSelector="@(item => item.Vehicles.VehicleBrands.Name)" />
+                    <HxGridColumn TItem="VehicleDetail" HeaderText="Color" ItemTextSelector="@(item => item.Vehicles.Color)" />
+                </Columns>
+                <ContextMenu Context="item">
+                    <HxContextMenu>
+                        <HxContextMenuItem Text="Quitar" Icon="BootstrapIcon.Trash" OnClick="async () => await DeleteItemClicked(item)" ConfirmationQuestion="@($"Está seguro de quitar el Vehículo {item.Vehicles.Plate}?")" />
+                    </HxContextMenu>
+                </ContextMenu>
+            </HxGrid>
+        </DataTemplate>
+        <DetailTemplate>
+            @*Edit: @VehicleDetail?.Id*@
+        </DetailTemplate>
+    </HxListLayout>
+</div>
+
+@code {
+
+    [Parameter]
+    public int PersonId { get; set; }
+
+    [Inject] protected NavigationManager NavigationManager { get; set; }
+
+    private VehicleDetail VehicleDetail { get; set; } = new VehicleDetail { IsActive = true };
+    //private FilterModelDto filterModel = new FilterModelDto();
+    private HxGrid<VehicleDetail> gridComponent;
+
+    private List<VehicleDetail> Vehicles { get; set; } = new List<VehicleDetail>();
+
+    //private MetaData MetaData { get; set; } = new MetaData();
+    private VehicleParametersDto _vehicleParameters = new VehicleParametersDto();
+
+    private int VehicleId { get; set; }
+
+    public bool newItemShow  = true;
+
+    private readonly IEnumerable<NamedView<FilterModelDto>> namedViews = new List<NamedView<FilterModelDto>>()
+        {
+            new NamedView<FilterModelDto>("Minimum = 1", () => new FilterModelDto { MinimumItemId = 1 } ),
+            new NamedView<FilterModelDto>("Minimum = 2", () => new FilterModelDto { MinimumItemId = 2 }),
+            new NamedView<FilterModelDto>("Minimum = 3", () => new FilterModelDto { MinimumItemId = 3 })
+        };
+
+    private async Task<GridDataProviderResult<VehicleDetail>> LoadDataItems(GridDataProviderRequest<VehicleDetail> request)
+    {
+        StateHasChanged();
+
+        //var pagingResponse = await VehicleRepository.GetAllVehiclePerPersonDetailAsync(_vehicleParameters, MetaData, PersonId);
+        Vehicles = await VehicleRepository.GetAllVehiclePerPersonDetailForAssingAsync(PersonId);
+
+
+        //Vehicles = pagingResponse.Items;
+        //MetaData = pagingResponse.MetaData;
+
+
+        //List<VehicleDetail> data = new List<VehicleDetail>()
+        //    {
+        //        new DataItemDto() { ItemId = 1, Name = "One"},
+        //        new DataItemDto() { ItemId = 2, Name = "Two"},
+        //        new DataItemDto() { ItemId = 3, Name = "Three"}
+        //    };
+
+        //List<VehicleDetail> data = Vehicles;
+
+        //IEnumerable<DataItemDto> result = data.Where(i => i.ItemId >= filterModel.MinimumItemId).ToList();
+
+        //return await Task.FromResult(new GridDataProviderResult<VehicleDetail>()
+        //    {
+        //        Data = Vehicles.Skip(request.StartIndex).Take(request.Count.Value).ToList(),
+        //        //TotalCount = MetaData.TotalCount
+        //    });
+
+        return request.ApplyTo(Vehicles);
+    }
+
+    //private async Task HandleFilterModelChanged(FilterModelDto newFilterModel)
+    //{
+    //    filterModel = newFilterModel;
+    //    await gridComponent.RefreshDataAsync();
+    //}
+
+    //protected async Task NamedViewSelected(NamedView<FilterModelDto> namedView)
+    //{
+    //    filterModel = namedView.Filter();
+    //    await gridComponent.RefreshDataAsync();
+    //}
+
+    //protected async Task SearchRequested()
+    //{
+    //    await gridComponent.RefreshDataAsync();
+    //}
+
+    private async Task DeleteItemClicked(VehicleDetail dataItemDto)
+    {
+        StateHasChanged();
+
+        bool success = false;
+
+        //_ = dataItemDto;
+        VehicleDetail = await VehicleRepository.GetVehicleDetailAsync(dataItemDto.Id);
+        VehicleRepository.DeleteVehicleDetail(VehicleDetail);
+
+        success = await VehicleRepository.SaveAsync();
+
+        if (success)
+            await gridComponent.RefreshDataAsync();
+
+        //return Task.CompletedTask;
+    }
+
+    private Task HandleSelectedDataItemChanged(VehicleDetail selection)
+    {
+        VehicleDetail = selection;
+        // await dataItemEditComponent.ShowAsync();
+        return Task.CompletedTask;
+    }
+
+    private Task NewItemClicked()
+    {
+
+        //VehicleDetail = new VehicleDetail
+        //    {
+        //        PersonId = PersonId,
+        //        VehicleId = VehicleId
+        //    };
+
+        newItemShow = !newItemShow;
+
+
+        //Title = currentItem.Vehicles.Plate;
+        //await dataItemEditComponent.ShowAsync();
+        return Task.CompletedTask;
+    }
+
+    public record FilterModelDto
+    {
+        public int MinimumItemId { get; set; }
+    }
+
+    public record DataItemDto
+    {
+        public int ItemId { get; set; }
+        public string Name { get; set; }
+    }
+
+    private async Task PlateSelectionHandler(int newValue)
+    {
+        bool success = false;
+
+        VehicleId = newValue;
+
+        VehicleDetail = new VehicleDetail
+            {
+                PersonId = PersonId,
+                VehicleId = VehicleId
+            };
+
+        await VehicleRepository.AddVehicleDetail(VehicleDetail);
+        success = await VehicleRepository.SaveAsync();
+
+        if (success)
+            await gridComponent.RefreshDataAsync();
+
+    }    
+
+    private async Task CancelNewItemHandler(bool newValue)
+    {
+        newItemShow = newValue;
+        await gridComponent.RefreshDataAsync();
+    }
+}

@@ -1,0 +1,165 @@
+﻿@page "/positions/edit/{id}"
+@page "/positions/edit"
+@page "/positions/edit/{action}/{id}"
+
+
+@using BlazorControlCefa.Data.Entities
+@using BlazorControlCefa.Data.Enums
+@using BlazorControlCefa.Repositories.Position
+
+@inject IPositionRepository PositionRepository
+
+@inject NavigationManager NavigationManager
+
+@attribute [Authorize(Policy = "positionView-policy")]
+
+<PageTitle>@Titulo Puesto</PageTitle>
+<h3>@Titulo Puesto</h3>
+
+@if (Position is null)
+{
+    <div class="spinner"></div>
+}
+else
+{
+    <EditForm Model="Position" OnValidSubmit="OnValidSubmit">
+        <DataAnnotationsValidator />
+        @*<ValidationSummary />*@
+
+        <div class="row mb-3">
+
+            <div class="col-md-6">
+                <label class="control-label">Estado</label>
+                <h4>
+                    <span class="badge @(Position.IsActive? "bg-primary": "bg-secondary")">
+                        @(Position.IsActive? "Activo": "Inactivo")
+                    </span>
+                </h4>
+            </div>
+        </div>        
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="Nombre" class="control-label">Nombre</label>
+            <InputText id="nombre" @bind-Value="Position.Name" class="form-control" disabled="@(DisabledComponent)" />            
+            <ValidationMessage For="@(()=> Position.Name)" />
+        </div>        
+    </div>    
+
+    <button type="submit" class="btn @(Action=="delete"? "btn-danger" : "btn-primary") @(HideSave? "visually-hidden" : string.Empty)">
+        @ButtonTitle
+    </button>
+
+    <button type="button" class="btn btn-secondary" @onclick="OnCancel">Cancelar</button>
+
+    <figure class="@(Action!="delete"? "visually-hidden" : string.Empty)">
+        <blockquote class="blockquote">
+            <p>Está seguro de borrar este registro?.</p>
+        </blockquote>
+        <figcaption class="blockquote-footer">
+            El registro no se va borrar de la base de dato, quedará en estado <cite title="Inactivo">Inactivo</cite>
+        </figcaption>
+    </figure>
+</EditForm>
+
+}
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+
+    [Parameter]
+    public string Action { get; set; }    
+
+    private Position Position { get; set; } = new Position { IsActive = true };    
+    
+    private bool HideSave { get; set; } = false;
+    private bool DisabledComponent { get; set; } = false;    
+
+    private string Titulo { get; set; }
+    private string ButtonTitle { get; set; } = "Guardar";
+
+    protected async override Task OnInitializedAsync()
+    {
+        
+        int.TryParse(Id, out int iPositionId);
+
+        if (!string.IsNullOrEmpty(Action))
+        {
+            Position = await PositionRepository.GetPositionAsync(iPositionId);
+
+            switch (Action)
+            {
+                case "delete":
+                    {
+                        Titulo = "Borrar";
+                        ButtonTitle = "Borrar";                        
+
+                        DisabledComponent = true;
+                    }
+                    break;
+
+                case "detail":
+                    {
+                        Titulo = "Detalle";
+
+                        HideSave = true;
+                        DisabledComponent = true;
+                    }
+                    break;
+            }
+        }
+        else
+        {
+            if (iPositionId != 0)
+            {
+                Titulo = "Editar";
+                Position = await PositionRepository.GetPositionAsync(iPositionId);
+            }
+            else
+            {
+                Titulo = "Nuevo";
+                Position = new Position();
+            }
+        }
+    }
+
+    private async Task OnValidSubmit()
+    {
+        bool success = false;
+
+        if (!string.IsNullOrEmpty(Action))
+        {
+            switch (Action)
+            {
+                case "delete":
+                    {
+                        PositionRepository.DeletePosition(Position);
+                        success = await PositionRepository.SaveAsync();
+                    }
+                    break;
+            }
+        }
+        else
+        {
+            if (Position.Id != 0)
+            {
+                PositionRepository.UpdatePosition(Position);
+                success = await PositionRepository.SaveAsync();
+            }
+            else
+            {
+                await PositionRepository.AddPosition(Position);
+                success = await PositionRepository.SaveAsync();
+            }
+        }
+
+        if (success)
+            NavigationManager.NavigateTo("/positions");
+    }
+
+    private void OnCancel()
+    {
+        NavigationManager.NavigateTo("/positions");
+    }    
+}

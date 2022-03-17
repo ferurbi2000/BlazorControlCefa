@@ -1,0 +1,68 @@
+﻿@using System.Globalization
+@using BlazorControlCefa.Data.Entities
+@using BlazorControlCefa.Repositories.Vehicle
+
+@inject IVehicleRepository VehicleRepository
+
+<div class="row g-0 mb-4">
+    <div class="col-md-11">
+        <HxAutosuggest Label=""                       
+                       Placeholder="Buscar por Placa"
+                       TItem="Vehicle"
+                       TValue="int"
+                       @bind-Value="@Plate"
+                       DataProvider="ProvideSuggestions"
+                       ValueSelector="(Vehicle c) => c.Id"
+                       TextSelector="(Vehicle c)=> c.Plate"
+                       ItemFromValueResolver="OnChangeSelection">
+            <ItemTemplate Context="item">@item.Plate - @item.VehicleTypes.Name - @item.VehicleBrands.Name - Color: @item.Color</ItemTemplate>
+            <EmptyTemplate>
+                <span class="p-2">No se pudo encontrar ninguna placa coincidente</span>
+            </EmptyTemplate>
+        </HxAutosuggest>
+    </div>
+    <div class="col-md-1 d-flex">
+        <HxButton Color="ThemeColor.Success" Enabled="@(Plate==0? false: true)" Icon="BootstrapIcon.BoxArrowDown" Tooltip="Asignar este vehículo" CssClass="ms-1" OnClick="@(() => OnPlateSeleted.InvokeAsync(Plate))" />
+    </div>
+</div>
+
+@*<p class="mt-3">Current value: @Plate</p>*@
+
+@code
+{
+    [Parameter]
+    public EventCallback<int> OnPlateSeleted { get; set; }
+
+    [Parameter]
+    public int Plate { get; set; } = 0;
+
+    private async Task<AutosuggestDataProviderResult<Vehicle>> ProvideSuggestions(AutosuggestDataProviderRequest request)
+    {
+        await Task.Delay(400); // backend API speed simulation
+        var collection = await VehicleRepository.GetAllVehicleForSelectionAsync();
+
+        return new AutosuggestDataProviderResult<Vehicle>
+            {
+                Data = collection
+                        .Where(v => v.Plate?.Contains(request.UserInput, StringComparison.CurrentCultureIgnoreCase) ?? false)
+                        .OrderBy(v => v.Plate)
+                        .ToList()
+            };
+    }
+
+    private async Task<Vehicle> ResolveAutosuggestItemFromValue(int? value)
+    {
+        if (value is null)
+        {
+            return null;
+        }
+        await Task.Delay(400); // backend API speed simulation
+
+        return await VehicleRepository.GetVehicleAsync(value.Value);
+    }
+
+    private async Task<Vehicle> OnChangeSelection(int value)
+    {
+        return await VehicleRepository.GetVehicleAsync(value);
+    }
+}

@@ -1,0 +1,198 @@
+﻿@using BlazorControlCefa.Data.Entities
+@using BlazorControlCefa.Data.Enums
+@using BlazorControlCefa.Repositories.Vehicle
+@using BlazorControlCefa.Repositories.VehicleBrand
+@using BlazorControlCefa.Repositories.VehicleType
+
+@inject IVehicleRepository VehicleRepository
+@inject IVehicleTypeRepository VehicleTypeRepository
+@inject IVehicleBrandRepository VehicleBrandRepository
+
+<div class="card mb-3 @(Hiden? "visually-hidden": string.Empty)" style="max-width: 180rem;">
+    <div class="card-header">Nuevo Vehículo</div>
+    <div class="card-body">
+        <EditForm Model="Vehicle" OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator />
+
+            <div class="row mb-3">
+                <div class="col-md-5">
+                    <label for="Plate" class="control-label">Placa</label>
+                    <InputText id="plate" @bind-Value="Vehicle.Plate" class="form-control form-control-sm" />
+                    <ValidationMessage For="@(()=> Vehicle.Plate)" />
+                </div>
+            </div>
+
+            <div class="row mb-3">
+
+                <div class="col-md-5">
+                    <label for="vehicleTypeId" class="control-label">Tipo de Vehículo</label>
+                    <InputSelect @bind-Value="Vehicle.VehicleTypeId" class="form-select form-select-sm">
+                        @*<option value="0">Seleccione el Departamento</option>*@
+                        @foreach (var vehicleType in VehicleTypes)
+                        {
+                            <option value="@vehicleType.Id">@vehicleType.Name</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(()=> Vehicle.VehicleTypeId)" />
+                </div>
+
+                <div class="col-md-4">
+                    <label for="vehicleBrandId" class="control-label">Marca del Vehículo</label>
+                    <InputSelect @bind-Value="Vehicle.VehicleBrandId" class="form-select form-select-sm">
+                        @*<option value="0">Seleccione el Departamento</option>*@
+                        @foreach (var vehicleBrand in VehicleBrands)
+                        {
+                            <option value="@vehicleBrand.Id">@vehicleBrand.Name</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(()=> Vehicle.VehicleBrandId)" />
+                </div>
+
+                <div class="col-md-3">
+                    <label for="color" class="control-label">Color</label>
+                    <InputSelect @bind-Value="Vehicle.Color" class="form-select form-select-sm">
+                        @*<option selected>Seleccione el Color</option>*@
+                        @foreach (var color in Enum.GetValues(typeof(Color)).Cast<Color>().OrderBy(x => x.ToString()))
+                        {
+                            <option value="@color">@color</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(()=> Vehicle.Color)" />
+                </div>
+
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-5">
+                    <label for="personTypeId" class="control-label">Vehículo Propio o asignado</label>
+                    <InputSelect @bind-Value="Vehicle.OwnerType" class="form-select form-select-sm">
+                        @*<option selected>Seleccione una opción</option>*@
+                        @foreach (var ownerType in Enum.GetValues(typeof(OwnerType)))
+                        {
+                            <option value="@ownerType">@ownerType</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(()=> Vehicle.OwnerType)" />
+                </div>
+                <div class="col-md-4">
+                    <label for="vehicleCode" class="control-label">Codigo Vehículo</label>
+                    <InputText id="vehicleCode" @bind-Value="Vehicle.VehicleCode" class="form-control form-control-sm" />
+                    <ValidationMessage For="@(()=> Vehicle.VehicleCode)" />
+                </div>
+
+                <div class="col-md-3">
+                    <label for="companyName" class="control-label">Empresa</label>
+                    <InputText id="companyName" @bind-Value="Vehicle.CompanyName" class="form-control form-control-sm" />
+                    <ValidationMessage For="@(()=> Vehicle.CompanyName)" />
+                </div>
+            </div>
+
+
+            @*<div class="mb-3">*@
+            <button type="submit" class="btn btn-success btn-sm">
+                Crear y Asignar
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" @onclick="@(OnCancel)">Cancelar</button>
+            @*<button type="button" class="btn btn-secondary btn-sm" @onclick="@(() => OnCancelSelected.InvokeAsync(!Hiden))">Cancelar</button>*@
+            @*</div>*@
+        </EditForm>
+    </div>
+    @*<div class="card-footer">
+        </div>*@
+</div>
+
+@*<div class="container bg-dark bg-opacity-10 rounded @(Hiden? "visually-hidden": string.Empty)">
+
+
+    </div>*@
+
+@code {
+    [Parameter]
+    public bool Hiden { get; set; } = true;
+
+    [Parameter]
+    public int PersonId { get; set; }
+
+    private Vehicle Vehicle { get; set; } = new Vehicle { IsActive = true };
+    private VehicleDetail VehicleDetail { get; set; } = new VehicleDetail { IsActive = true };
+
+    private List<VehicleType> VehicleTypes { get; set; } = new List<VehicleType>();
+    private List<VehicleBrand> VehicleBrands { get; set; } = new List<VehicleBrand>();
+
+    [Parameter]
+    public EventCallback<bool> OnCancelSelected { get; set; }
+
+
+    protected async override Task OnInitializedAsync()
+    {
+        VehicleTypes = await VehicleTypeRepository.GetAllVehicleTypeForSelectionAsync();
+        VehicleBrands = await VehicleBrandRepository.GetAllVehicleBrandForSelectionAsync();
+        Vehicle = new Vehicle
+            {
+                VehicleTypeId = 1,
+                VehicleBrandId = 1,
+                OwnerType = OwnerType.Propio.ToString(),
+                Color = Color.Amarillo.ToString()
+            };
+
+    }
+
+    //protected override async Task OnAfterRenderAsync(bool firstRender)
+    //{
+    //    if (firstRender)
+    //    {
+    //        Vehicle = new Vehicle
+    //            {
+    //                VehicleTypeId = 1,
+    //                VehicleBrandId = 1,
+    //                OwnerType = OwnerType.Propio.ToString(),
+    //                Color = Color.Amarillo.ToString()
+    //            };
+    //        StateHasChanged();
+    //    }
+    //}
+
+    private async Task OnValidSubmit()
+    {
+        bool success = false;
+
+        await VehicleRepository.AddVehicle(Vehicle);
+        success = await VehicleRepository.SaveAsync();
+        if (success)
+        {
+            //var vehicle = VehicleRepository.GetVehicleAsync(Vehicle.Id);
+
+            VehicleDetail = new VehicleDetail
+                {
+                    PersonId = PersonId,
+                    VehicleId = Vehicle.Id
+                };
+
+            await VehicleRepository.AddVehicleDetail(VehicleDetail);
+            success = await VehicleRepository.SaveAsync();
+            if (success)
+            {
+                //await OnCancelSelected.InvokeAsync(!Hiden);
+                StateHasChanged();
+                await OnCancel();
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task OnCancel()
+    {
+        //Hiden = true;
+        //Vehicle = null;
+        Vehicle = new Vehicle
+            {
+                VehicleTypeId = 1,
+                VehicleBrandId = 1,
+                OwnerType = OwnerType.Propio.ToString(),
+                Color = Color.Amarillo.ToString()
+            };
+
+        await OnCancelSelected.InvokeAsync(!Hiden);
+
+    }
+}

@@ -1,0 +1,197 @@
+﻿<div class="top-row ps-1 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">BlazorControlCefa</a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+
+    <ul class="nav flex-column">
+
+        <li class="nav-item px-1">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="oi oi-home" aria-hidden="true"></span> Home
+            </NavLink>
+        </li>
+
+        <li class="nav-item px-1">
+            <AuthorizeView>
+                <NavLink class="nav-link" href="visits">
+                    <span class="oi oi-calendar" aria-hidden="true"></span> Visitas
+                </NavLink>
+            </AuthorizeView>
+        </li>
+
+        <li class="nav-item px-1">
+            <NavLink class="nav-link" href="persons">
+                <span class="oi oi-people" aria-hidden="true"></span> Personas
+            </NavLink>
+        </li>
+
+        <li class="nav-item px-1">
+            <AuthorizeView>
+                <NavLink class="nav-link" href="vehicles">
+                    <span class="oi oi-key" aria-hidden="true"></span> Vehículos
+                </NavLink>
+            </AuthorizeView>
+        </li>
+
+        <li class="nav-item px-1" dropdown>
+            <NavLink class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false" @onclick="()=>expandSubMenu = !expandSubMenu">
+                <span class="oi oi-cog" aria-hidden="true"></span> Mantenimiento
+            </NavLink>
+            @if (expandSubMenu)
+            {
+                <ul class="nav flex-column">
+                    <AuthorizeView Policy="personTypeView-policy">
+                        <li class="nav-item px-4">
+                            <NavLink class="nav-link" href="persontypes">
+                                <span class="oi oi-list-rich" aria-hidden="true"></span> Tipo Persona
+                            </NavLink>
+                        </li>
+                    </AuthorizeView>
+
+                    <AuthorizeView Policy="departmentView-policy">
+                        <li class="nav-item px-4">
+                            <NavLink class="nav-link" href="departments">
+                                <span class="oi oi-list-rich" aria-hidden="true"></span> Departamentos
+                            </NavLink>
+                        </li>
+                    </AuthorizeView>
+
+                    <AuthorizeView Policy="positionView-policy">
+                        <li class="nav-item px-4">
+                            <NavLink class="nav-link" href="positions">
+                                <span class="oi oi-list-rich" aria-hidden="true"></span> Puestos
+                            </NavLink>
+                        </li>
+                    </AuthorizeView>
+
+                    <AuthorizeView Policy="vehicleTypeView-policy">
+                        <li class="nav-item px-4">
+                            <NavLink class="nav-link" href="vehicleTypes">
+                                <span class="oi oi-list-rich" aria-hidden="true"></span> Tipo Vehículos
+                            </NavLink>
+                        </li>
+                    </AuthorizeView>
+
+                    <AuthorizeView Policy="vehicleBrandView-policy">
+                        <li class="nav-item px-4">
+                            <NavLink class="nav-link" href="vehicleBrands">
+                                <span class="oi oi-list-rich" aria-hidden="true"></span> Marca de Vehículos
+                            </NavLink>
+                        </li>
+                    </AuthorizeView>
+
+                    <AuthorizeView Policy="reasonsView-policy">
+                        <li class="nav-item px-4">
+                            <NavLink class="nav-link" href="reasons">
+                                <span class="oi oi-list-rich" aria-hidden="true"></span> Motivos Visitas
+                            </NavLink>
+                        </li>
+                    </AuthorizeView>
+
+                    <AuthorizeView Policy="visitTypesView-policy">
+                        <li class="nav-item px-4">
+                            <NavLink class="nav-link" href="visitTypes">
+                                <span class="oi oi-list-rich" aria-hidden="true"></span> Tipo de Visitas
+                            </NavLink>
+                        </li>
+                    </AuthorizeView>
+                    
+                </ul>
+            }
+
+        </li>
+
+    </ul>
+
+
+
+    @*<nav class="flex-column">
+        <div class="nav-item px-3">
+        <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+        <span class="oi oi-home" aria-hidden="true"></span> Home
+        </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+        <AuthorizeView>
+        <NavLink class="nav-link" href="visits">
+        <span class="oi oi-calendar" aria-hidden="true"></span> Visitas
+        </NavLink>
+        </AuthorizeView>
+        </div>
+
+        <div class="nav-item px-3">
+        <AuthorizeView>
+        <NavLink class="nav-link" href="persons">
+        <span class="oi oi-people" aria-hidden="true"></span> Personas
+        </NavLink>
+        </AuthorizeView>
+        </div>
+
+        <div class="nav-item px-3">
+        <AuthorizeView>
+        <NavLink class="nav-link" href="vehicles">
+        <span class="oi oi-people" aria-hidden="true"></span> Vehículos
+        </NavLink>
+        </AuthorizeView>
+        </div>
+
+        <AuthorizeView Policy="personTypeView-policy">
+        <div class="nav-item px-3">
+        <NavLink class="nav-link" href="persontypes">
+        <span class="oi oi-list-rich" aria-hidden="true"></span> Tipo Persona
+        </NavLink>
+        </div>
+        </AuthorizeView>
+
+        <AuthorizeView Policy="departmentView-policy">
+        <div class="nav-item px-3">
+        <NavLink class="nav-link" href="departments">
+        <span class="oi oi-list-rich" aria-hidden="true"></span> Departamentos
+        </NavLink>
+        </div>
+        </AuthorizeView>
+
+        <AuthorizeView Policy="positionView-policy">
+        <div class="nav-item px-3">
+        <NavLink class="nav-link" href="positions">
+        <span class="oi oi-list-rich" aria-hidden="true"></span> Puestos
+        </NavLink>
+        </div>
+        </AuthorizeView>
+
+        <AuthorizeView Policy="vehicleTypeView-policy">
+        <div class="nav-item px-3">
+        <NavLink class="nav-link" href="vehicleTypes">
+        <span class="oi oi-list-rich" aria-hidden="true"></span> Tipo Vehículos
+        </NavLink>
+        </div>
+        </AuthorizeView>
+
+        <AuthorizeView Policy="vehicleBrandView-policy">
+        <div class="nav-item px-3">
+        <NavLink class="nav-link" href="vehicleBrands">
+        <span class="oi oi-list-rich" aria-hidden="true"></span> Marca de Vehículos
+        </NavLink>
+        </div>
+        </AuthorizeView>
+        </nav>*@
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+    private bool expandSubMenu;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

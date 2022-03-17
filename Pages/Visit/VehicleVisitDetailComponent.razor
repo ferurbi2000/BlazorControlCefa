@@ -1,0 +1,211 @@
+﻿@using BlazorControlCefa.Application.Dtos.Vehicle
+@using BlazorControlCefa.Application.Wrappers
+@using BlazorControlCefa.Data.Entities
+@using BlazorControlCefa.Pages.Person.VehicleAsigment
+@using BlazorControlCefa.Repositories.Vehicle
+@using BlazorControlCefa.Repositories.Visit
+@using BlazorControlCefa.Pages.Vehicle
+
+
+@*@inject IVisitRepository VisitRepository*@
+@inject IVehicleVisitDetailRepository VehicleVisitDetailRepository
+
+
+<div class="row g-0 mb-3">
+    <div class="col-md-8">
+
+        <VehiclePlateFinderComponent Plate="0" OnPlateSeleted="PlateSelectionHandler" />
+        @*<PersonFinderComponent Person="0" Enabled=newItemShow OnPersonSeleted="PersonSelectionHandler" />*@
+        @*<p>VehicleId: @VehicleId</p>*@
+
+    </div>
+    <div class="col-md-4 d-flex">
+        <HxButton Color="ThemeColor.Warning" Icon="BootstrapIcon.PlusLg" Tooltip="Crear persona" CssClass="ms-2"
+                  OnClick="NewItemClicked"
+                  Enabled="@(!newItemShow? false: true)" />
+    </div>
+
+</div>
+
+
+<div>
+    <CreatePersonForAVisitComponent Hiden="@newItemShow"
+                             VisitId="@VisitId" OnCancelSelected="CancelNewItemHandler" />
+</div>
+
+<div class="@(!newItemShow ? "visually-hidden": string.Empty)" style="height: 358px; overflow-y: scroll;">
+    <HxListLayout Title="Vehiculos" TFilterModel="FilterModelDto">
+        @*<NamedViewsTemplate>
+            <HxNamedViewList TFilterModel="FilterModelDto" FilterModel="filterModel" FilterModelChanged="HandleFilterModelChanged" NamedViews="namedViews" OnNamedViewSelected="NamedViewSelected" />
+            </NamedViewsTemplate>*@
+        <SearchTemplate>
+
+        </SearchTemplate>
+        @*<FilterTemplate Context="filterContext">
+            <HxInputNumber Label="MinimumItemId" @bind-Value="filterContext.MinimumItemId" />
+            </FilterTemplate>*@
+        <CommandsTemplate>
+            @*<HxButton Text="Nuevo" Color="ThemeColor.Success" Size="ButtonSize.Small" Icon="BootstrapIcon.PlusLg" CssClass="ms-1" OnClick="NewItemClicked" />*@
+        </CommandsTemplate>
+        <DataTemplate>
+            <HxGrid @ref="gridComponent" TItem="VisitVehicleDetail"
+                    DataProvider="LoadDataItems" SelectedDataItem="VisitVehicleDetail"
+                    SelectedDataItemChanged="HandleSelectedDataItemChanged"
+                    TableContainerCssClass="table-responsive"
+                    ContentNavigationMode="GridContentNavigationMode.InfiniteScroll"
+                    ItemRowHeight="41">
+                <Columns>
+                    @*<HxGridColumn TItem="VehicleDetail" HeaderText="Placa" ItemTextSelector="@(item => item.Id.ToString())" SortString="@nameof(VehicleDetail.Id)"  IsDefaultSortColumn="true" />*@
+                    <HxGridColumn TItem="VisitVehicleDetail" HeaderText="Cédula" ItemTextSelector="@(item => item.Id.ToString())" />
+                    @*<HxGridColumn TItem="VisitVehicleDetail" HeaderText="Cédula" ItemTextSelector="@(item => item.Persons.Cedula)" />
+                    <HxGridColumn TItem="VisitVehicleDetail" HeaderText="Nombres" ItemTextSelector="@(item => item.Persons.FirstName)" />
+                    <HxGridColumn TItem="VisitVehicleDetail" HeaderText="Apellidos" ItemTextSelector="@(item => item.Persons.LastName)" />
+                    <HxGridColumn TItem="VisitVehicleDetail" HeaderText="Tipo Persona" ItemTextSelector="@(item => item.Persons.PersonTypes.Name)" />*@
+                    
+                    @*<HxGridColumn TItem="VisitPersonDetail" HeaderText="Tipo Vehiculo" ItemTextSelector="@(item => item.Vehicles.VehicleTypes.Name)" />
+                        <HxGridColumn TItem="VisitPersonDetail" HeaderText="Marca" ItemTextSelector="@(item => item.Vehicles.VehicleBrands.Name)" />
+                        <HxGridColumn TItem="VisitPersonDetail" HeaderText="Color" ItemTextSelector="@(item => item.Vehicles.Color)" />*@
+                </Columns>
+                <ContextMenu Context="item">
+                    <HxContextMenu>
+                        <HxContextMenuItem Text="Quitar" Icon="BootstrapIcon.Trash" OnClick="async () => await DeleteItemClicked(item)" />
+                    </HxContextMenu>
+                </ContextMenu>
+            </HxGrid>
+        </DataTemplate>
+        <DetailTemplate>
+            @*Edit: @VehicleDetail?.Id*@
+        </DetailTemplate>
+    </HxListLayout>
+</div>
+
+@code {
+
+    [Inject] protected IHxMessengerService Messenger { get; set; }
+    [Inject] protected IHxMessageBoxService MessageBox { get; set; }
+
+    [Parameter]
+    public int VisitId { get; set; }
+
+    [Inject] protected NavigationManager NavigationManager { get; set; }
+
+    private VisitVehicleDetail VisitVehicleDetail { get; set; } = new VisitVehicleDetail { IsActive = true };
+    //private FilterModelDto filterModel = new FilterModelDto();
+    private HxGrid<VisitVehicleDetail> gridComponent;
+
+    private List<VisitVehicleDetail> Vehicles { get; set; } = new List<VisitVehicleDetail>();
+
+    //private MetaData MetaData { get; set; } = new MetaData();
+    private VehicleParametersDto _vehicleParameters = new VehicleParametersDto();
+
+    private int VehicleId { get; set; }
+    private int PersonId { get; set; }
+
+    public bool newItemShow = true;
+
+    private readonly IEnumerable<NamedView<FilterModelDto>> namedViews = new List<NamedView<FilterModelDto>>()
+    {
+        new NamedView<FilterModelDto>("Minimum = 1", () => new FilterModelDto { MinimumItemId = 1 } ),
+        new NamedView<FilterModelDto>("Minimum = 2", () => new FilterModelDto { MinimumItemId = 2 }),
+        new NamedView<FilterModelDto>("Minimum = 3", () => new FilterModelDto { MinimumItemId = 3 })
+    };
+
+    
+    private async Task<GridDataProviderResult<VisitVehicleDetail>> LoadDataItems(GridDataProviderRequest<VisitVehicleDetail> request)
+    {
+        StateHasChanged();
+       
+        Vehicles = await VehicleVisitDetailRepository.GetAllVehiclePerVisitDetailForAssingAsync(VisitId);
+      
+        return request.ApplyTo(Vehicles);
+    }
+
+
+    private async Task DeleteItemClicked(VisitVehicleDetail dataItemDto)
+    {
+        StateHasChanged();
+
+        bool success = false;
+
+        //_ = dataItemDto;
+        VisitVehicleDetail = await VehicleVisitDetailRepository.GetVisitVehicleDetailAsync(dataItemDto.Id);
+        VehicleVisitDetailRepository.DeleteVisitVehicleDetail(VisitVehicleDetail);
+
+        success = await VehicleVisitDetailRepository.SaveAsync();
+
+        if (success)
+            await gridComponent.RefreshDataAsync();
+
+    }
+
+    private Task HandleSelectedDataItemChanged(VisitVehicleDetail selection)
+    {
+        VisitVehicleDetail = selection;        
+        return Task.CompletedTask;
+    }
+
+    private Task NewItemClicked()
+    {
+
+        //VehicleDetail = new VehicleDetail
+        //    {
+        //        PersonId = PersonId,
+        //        VehicleId = VehicleId
+        //    };
+
+        newItemShow = !newItemShow;
+
+
+        //Title = currentItem.Vehicles.Plate;
+        //await dataItemEditComponent.ShowAsync();
+        return Task.CompletedTask;
+    }
+
+    public record FilterModelDto
+    {
+        public int MinimumItemId { get; set; }
+    }
+
+    public record DataItemDto
+    {
+        public int ItemId { get; set; }
+        public string Name { get; set; }
+    }
+   
+    private async Task PlateSelectionHandler(int newValue)
+    {
+
+        bool success = false;
+
+        var vehicleVisitExist = await VehicleVisitDetailRepository.FindAnyVehicleInVisitDetail(VisitId, newValue);
+
+        if (vehicleVisitExist)
+        {
+            //send a message
+            Messenger.AddError(title: "Error", message: "Ya existe una entrada para el vehiculo seleccionado.");
+        }
+        else
+        {
+            VehicleId = newValue;
+
+            VisitVehicleDetail = new VisitVehicleDetail
+                {
+                    VisitId = VisitId,
+                    VehicleId = VehicleId
+                };
+
+            await VehicleVisitDetailRepository.AddVisitVehicleDetail(VisitVehicleDetail);
+            success = await VehicleVisitDetailRepository.SaveAsync();
+
+            if (success)
+                await gridComponent.RefreshDataAsync();
+        }
+
+    }
+
+    private async Task CancelNewItemHandler(bool newValue)
+    {
+        newItemShow = newValue;
+        await gridComponent.RefreshDataAsync();
+    }
+}
